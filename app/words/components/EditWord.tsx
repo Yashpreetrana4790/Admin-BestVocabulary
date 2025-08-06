@@ -57,7 +57,7 @@ export default function BaseEditForm({
         <CardTitle>Edit Basic Details of Word</CardTitle>
       </CardHeader>
       <CardContent>
-        <Formik
+        <Formik 
           initialValues={{
             wordId: wordId || "",
             word: word || "",

@@ -1,6 +1,8 @@
-'use client'
+'use client';
+
 import React, { useState } from 'react';
-import { Formik, Form, Field, FieldArray } from 'formik';
+import { Formik, Form, Field, FieldArray, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Trash2, Plus, ChevronDown, ChevronUp } from 'lucide-react';
@@ -10,29 +12,30 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { updateWordMeaningInfo } from '../service/updateWord';
 
 interface CommonUsage {
   context: string;
   example: string;
-  _id?: { $oid: string };
+  _id?: string;
 }
 
 interface Meaning {
   pos: string;
-  subtitle: string;
+  subtitle?: string;
   pronunciation: string;
   common_usage: CommonUsage[];
-  tone: string;
-  category: string;
-  difficulty: string;
+  tone?: string;
+  category?: string;
+  difficulty?: string;
   meaning: string;
-  mnemonic: string;
-  easyMeaning: string;
-  kiddefinition: string;
+  mnemonic?: string;
+  easyMeaning?: string;
+  kiddefinition?: string;
   example_sentences: string[];
-  synonyms: string[];
-  antonyms: string[];
-  _id?: { $oid: string };
+  synonyms?: string[];
+  antonyms?: string[];
+  _id?: string;
 }
 
 interface MeaningsUpdateFormProps {
@@ -40,11 +43,38 @@ interface MeaningsUpdateFormProps {
   initialMeanings: Meaning[];
 }
 
+const meaningValidationSchema = Yup.object().shape({
+  meanings: Yup.array().of(
+    Yup.object().shape({
+      pos: Yup.string().required('Part of speech is required'),
+      pronunciation: Yup.string().required('Pronunciation is required'),
+      meaning: Yup.string().required('Definition is required'),
+      common_usage: Yup.array().of(
+        Yup.object().shape({
+          context: Yup.string().required('Context is required'),
+          example: Yup.string().required('Example is required'),
+        })
+      ),
+      example_sentences: Yup.array().of(
+        Yup.string().required('Sentence cannot be empty')
+      ).min(1, 'At least one example sentence is required'),
+      tone: Yup.string(),
+      category: Yup.string(),
+      difficulty: Yup.string(),
+      subtitle: Yup.string(),
+      mnemonic: Yup.string(),
+      easyMeaning: Yup.string(),
+      kiddefinition: Yup.string(),
+      synonyms: Yup.array().of(Yup.string()),
+      antonyms: Yup.array().of(Yup.string()),
+    })
+  ),
+});
+
 const MeaningsUpdateForm = ({ wordId, initialMeanings }: MeaningsUpdateFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [openSections, setOpenSections] = useState<Record<number, boolean>>({});
 
-  // Initialize all sections as open by default
   React.useEffect(() => {
     const initialState: Record<number, boolean> = {};
     initialMeanings.forEach((_, index) => {
@@ -63,11 +93,12 @@ const MeaningsUpdateForm = ({ wordId, initialMeanings }: MeaningsUpdateFormProps
   const handleSubmit = async (values: { meanings: Meaning[] }) => {
     setIsSubmitting(true);
     try {
-      // Call your API to update meanings
-      console.log('Submitting:', values);
-      // await updateMeanings(wordId, values.meanings);
+      // Process each meaning individually
+     await updateWordMeaningInfo(wordId, values.meanings );
+      alert('Meanings updated successfully!');
     } catch (error) {
       console.error('Error updating meanings:', error);
+      alert('Failed to update meanings. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -97,8 +128,11 @@ const MeaningsUpdateForm = ({ wordId, initialMeanings }: MeaningsUpdateFormProps
       <Formik
         initialValues={initialValues}
         onSubmit={handleSubmit}
+        validationSchema={meaningValidationSchema}
+        validateOnChange={false}
+        validateOnBlur={true}
       >
-        {({ values }) => (
+        {({ values, errors }) => (
           <Form className="space-y-6 border rounded-lg p-6">
             <h2 className="text-md font-semibold">Update Meanings</h2>
             <FieldArray name="meanings">
@@ -106,7 +140,7 @@ const MeaningsUpdateForm = ({ wordId, initialMeanings }: MeaningsUpdateFormProps
                 <div className="space-y-4">
                   {values.meanings.map((meaning, meaningIndex) => (
                     <Collapsible
-                      key={meaningIndex}
+                      key={meaning._id || meaningIndex}
                       open={openSections[meaningIndex]}
                       onOpenChange={() => toggleSection(meaningIndex)}
                       className="border rounded-lg p-4 space-y-4"
@@ -127,13 +161,17 @@ const MeaningsUpdateForm = ({ wordId, initialMeanings }: MeaningsUpdateFormProps
                               <span className="sr-only">Toggle</span>
                             </Button>
                           </CollapsibleTrigger>
-                          <h3 className="text-lg font-medium">Meaning #{meaningIndex + 1}</h3>
+                          <h3 className="text-lg font-medium">
+                            Meaning #{meaningIndex + 1}
+                          </h3>
                         </div>
                         <Button
                           type="button"
                           variant="destructive"
                           size="sm"
+                          className="cursor-pointer"
                           onClick={() => remove(meaningIndex)}
+                          disabled={values.meanings.length <= 1}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -141,35 +179,62 @@ const MeaningsUpdateForm = ({ wordId, initialMeanings }: MeaningsUpdateFormProps
 
                       <CollapsibleContent className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Part of Speech */}
                           <div>
-                            <Label htmlFor={`meanings.${meaningIndex}.pos`}>Part of Speech</Label>
+                            <Label htmlFor={`meanings.${meaningIndex}.pos`} className="mb-2">
+                              Part of Speech <span className="text-red-500">*</span>
+                            </Label>
                             <Field
                               as={Input}
                               name={`meanings.${meaningIndex}.pos`}
                               placeholder="noun, verb, etc."
                             />
+                            <ErrorMessage
+                              name={`meanings.${meaningIndex}.pos`}
+                              component="div"
+                              className="text-red-500 text-sm mt-1"
+                            />
                           </div>
 
+                          {/* Pronunciation */}
                           <div>
-                            <Label htmlFor={`meanings.${meaningIndex}.pronunciation`}>Pronunciation</Label>
+                            <Label htmlFor={`meanings.${meaningIndex}.pronunciation`} className="mb-2">
+                              Pronunciation <span className="text-red-500">*</span>
+                            </Label>
                             <Field
                               as={Input}
                               name={`meanings.${meaningIndex}.pronunciation`}
                               placeholder="/prəˌnʌn.siˈeɪ.ʃən/"
                             />
+                            <ErrorMessage
+                              name={`meanings.${meaningIndex}.pronunciation`}
+                              component="div"
+                              className="text-red-500 text-sm mt-1"
+                            />
                           </div>
 
+                          {/* Definition */}
                           <div className="md:col-span-2">
-                            <Label htmlFor={`meanings.${meaningIndex}.meaning`}>Definition</Label>
+                            <Label htmlFor={`meanings.${meaningIndex}.meaning`} className="mb-2">
+                              Definition <span className="text-red-500">*</span>
+                            </Label>
                             <Field
                               as={Input}
                               name={`meanings.${meaningIndex}.meaning`}
                               placeholder="Enter the definition"
                             />
+                            <ErrorMessage
+                              name={`meanings.${meaningIndex}.meaning`}
+                              component="div"
+                              className="text-red-500 text-sm mt-1"
+                            />
                           </div>
 
+                          {/* Subtitle */}
                           <div className="md:col-span-2">
-                            <Label htmlFor={`meanings.${meaningIndex}.subtitle`}>Subtitle</Label>
+                            <Label htmlFor={`meanings.${meaningIndex}.subtitle`} className="mb-2">
+                              Subtitle
+                            </Label>
                             <Field
                               as={Input}
                               name={`meanings.${meaningIndex}.subtitle`}
@@ -177,8 +242,11 @@ const MeaningsUpdateForm = ({ wordId, initialMeanings }: MeaningsUpdateFormProps
                             />
                           </div>
 
+                          {/* Mnemonic */}
                           <div className="md:col-span-2">
-                            <Label htmlFor={`meanings.${meaningIndex}.mnemonic`}>Mnemonic</Label>
+                            <Label htmlFor={`meanings.${meaningIndex}.mnemonic`} className="mb-2">
+                              Mnemonic
+                            </Label>
                             <Field
                               as={Input}
                               name={`meanings.${meaningIndex}.mnemonic`}
@@ -186,8 +254,11 @@ const MeaningsUpdateForm = ({ wordId, initialMeanings }: MeaningsUpdateFormProps
                             />
                           </div>
 
+                          {/* Easy Meaning */}
                           <div className="md:col-span-2">
-                            <Label htmlFor={`meanings.${meaningIndex}.easyMeaning`}>Easy Meaning</Label>
+                            <Label htmlFor={`meanings.${meaningIndex}.easyMeaning`} className="mb-2">
+                              Easy Meaning
+                            </Label>
                             <Field
                               as={Input}
                               name={`meanings.${meaningIndex}.easyMeaning`}
@@ -195,8 +266,11 @@ const MeaningsUpdateForm = ({ wordId, initialMeanings }: MeaningsUpdateFormProps
                             />
                           </div>
 
+                          {/* Kid Definition */}
                           <div className="md:col-span-2">
-                            <Label htmlFor={`meanings.${meaningIndex}.kiddefinition`}>Kid Definition</Label>
+                            <Label htmlFor={`meanings.${meaningIndex}.kiddefinition`} className="mb-2">
+                              Kid Definition
+                            </Label>
                             <Field
                               as={Input}
                               name={`meanings.${meaningIndex}.kiddefinition`}
@@ -204,8 +278,11 @@ const MeaningsUpdateForm = ({ wordId, initialMeanings }: MeaningsUpdateFormProps
                             />
                           </div>
 
+                          {/* Tone */}
                           <div className="md:col-span-2">
-                            <Label htmlFor={`meanings.${meaningIndex}.tone`}>Tone</Label>
+                            <Label htmlFor={`meanings.${meaningIndex}.tone`} className="mb-2">
+                              Tone
+                            </Label>
                             <Field
                               as={Input}
                               name={`meanings.${meaningIndex}.tone`}
@@ -213,8 +290,11 @@ const MeaningsUpdateForm = ({ wordId, initialMeanings }: MeaningsUpdateFormProps
                             />
                           </div>
 
+                          {/* Category */}
                           <div className="md:col-span-2">
-                            <Label htmlFor={`meanings.${meaningIndex}.category`}>Category</Label>
+                            <Label htmlFor={`meanings.${meaningIndex}.category`} className="mb-2">
+                              Category
+                            </Label>
                             <Field
                               as={Input}
                               name={`meanings.${meaningIndex}.category`}
@@ -222,8 +302,11 @@ const MeaningsUpdateForm = ({ wordId, initialMeanings }: MeaningsUpdateFormProps
                             />
                           </div>
 
+                          {/* Difficulty */}
                           <div className="md:col-span-2">
-                            <Label htmlFor={`meanings.${meaningIndex}.difficulty`}>Difficulty</Label>
+                            <Label htmlFor={`meanings.${meaningIndex}.difficulty`} className="mb-2">
+                              Difficulty
+                            </Label>
                             <Field
                               as={Input}
                               name={`meanings.${meaningIndex}.difficulty`}
@@ -246,25 +329,45 @@ const MeaningsUpdateForm = ({ wordId, initialMeanings }: MeaningsUpdateFormProps
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => removeUsage(usageIndex)}
+                                        disabled={meaning.common_usage.length <= 1}
+                                        className="cursor-pointer"
                                       >
-                                        <Trash2 className="h-4 w-4" />
+                                        <Trash2 className="h-4 w-4 text-red-500" />
                                       </Button>
                                     </div>
                                     <div>
-                                      <Label htmlFor={`meanings.${meaningIndex}.common_usage.${usageIndex}.context`}>Context</Label>
+                                      <Label htmlFor={`meanings.${meaningIndex}.common_usage.${usageIndex}.context`} className="mb-2">
+                                        Context {usageIndex === 0 && <span className="text-red-500">*</span>}
+                                      </Label>
                                       <Field
                                         as={Input}
                                         name={`meanings.${meaningIndex}.common_usage.${usageIndex}.context`}
                                         placeholder="Literary, Formal, etc."
                                       />
+                                      {usageIndex === 0 && (
+                                        <ErrorMessage
+                                          name={`meanings.${meaningIndex}.common_usage.${usageIndex}.context`}
+                                          component="div"
+                                          className="text-red-500 text-sm mt-1"
+                                        />
+                                      )}
                                     </div>
                                     <div>
-                                      <Label htmlFor={`meanings.${meaningIndex}.common_usage.${usageIndex}.example`}>Example</Label>
+                                      <Label htmlFor={`meanings.${meaningIndex}.common_usage.${usageIndex}.example`} className="mb-2">
+                                        Example {usageIndex === 0 && <span className="text-red-500">*</span>}
+                                      </Label>
                                       <Field
                                         as={Input}
                                         name={`meanings.${meaningIndex}.common_usage.${usageIndex}.example`}
                                         placeholder="Example sentence"
                                       />
+                                      {usageIndex === 0 && (
+                                        <ErrorMessage
+                                          name={`meanings.${meaningIndex}.common_usage.${usageIndex}.example`}
+                                          component="div"
+                                          className="text-red-500 text-sm mt-1"
+                                        />
+                                      )}
                                     </div>
                                   </div>
                                 ))}
@@ -284,7 +387,9 @@ const MeaningsUpdateForm = ({ wordId, initialMeanings }: MeaningsUpdateFormProps
 
                         {/* Example Sentences Section */}
                         <div className="space-y-4">
-                          <h4 className="font-medium">Example Sentences</h4>
+                          <h4 className="font-medium">
+                            Example Sentences <span className="text-red-500">*</span>
+                          </h4>
                           <FieldArray name={`meanings.${meaningIndex}.example_sentences`}>
                             {({ push: pushSentence, remove: removeSentence }) => (
                               <div className="space-y-2">
@@ -299,12 +404,19 @@ const MeaningsUpdateForm = ({ wordId, initialMeanings }: MeaningsUpdateFormProps
                                       type="button"
                                       variant="ghost"
                                       size="sm"
+                                      className="cursor-pointer"
                                       onClick={() => removeSentence(sentenceIndex)}
+                                      disabled={meaning.example_sentences.length <= 1}
                                     >
-                                      <Trash2 className="h-4 w-4" />
+                                      <Trash2 className="h-4 w-4 text-red-500" />
                                     </Button>
                                   </div>
                                 ))}
+                                <ErrorMessage
+                                  name={`meanings.${meaningIndex}.example_sentences`}
+                                  component="div"
+                                  className="text-red-500 text-sm mt-1"
+                                />
                                 <Button
                                   type="button"
                                   variant="outline"

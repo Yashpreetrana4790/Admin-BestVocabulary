@@ -30,16 +30,17 @@ export default async function WordDetailPage({ params }: WordProp) {
         </Link>
       </div>
       <div className="flex  gap-5">
-
-        <BaseEditForm
-          word={wordData?.word}
-          pronunciation={wordData?.pronunciation}
-          frequency={wordData?.frequency}
-          overall_tone={wordData?.overall_tone}
-          wordId={wordData?._id}
-          etymology={wordData?.etymology}
-          misspellings={wordData?.misspellings}
-        />
+        <div className="w-1/2">
+          <BaseEditForm
+            word={wordData?.word}
+            pronunciation={wordData?.pronunciation}
+            frequency={wordData?.frequency}
+            overall_tone={wordData?.overall_tone}
+            wordId={wordData?._id}
+            etymology={wordData?.etymology}
+            misspellings={wordData?.misspellings}
+          />
+        </div>
         <MeaningsUpdateForm
           wordId={wordData?._id}
           initialMeanings={wordData?.meanings}
