@@ -3,6 +3,7 @@ import { getWords } from "./service/getWords";
 import { WordData } from "@/types/word";
 import Pagination from "@/components/Pagination";
 import SearchBar from "@/components/SearchBar";
+import { PaginationControls } from "@/components/PaginationControl";
 
 
 type SearchParams = {
@@ -29,11 +30,13 @@ export default async function VocabularyPage({
     startsWith: searchParams?.startsWith
   });
 
+  const { pagination } = wordData;
+  console.log(wordData, "wds ")
   return (
     <>
-    <div>
-      
-    </div>
+      <div>
+
+      </div>
       <SearchBar route="/words" />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
         {wordData?.words?.map((word: WordData, index: number) => (
@@ -41,12 +44,12 @@ export default async function VocabularyPage({
         ))}
 
       </div>
-      {
-        wordData?.words.length > 0 &&
-        <Pagination
-          pageNumber={searchParams.page ? +searchParams.page : 1}
-          total={wordData?.total} />
-      }
+      <PaginationControls
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        itemsPerPage={pagination.itemsPerPage}
+        totalItems={pagination.totalItems}
+      />
     </>
   );
 }

@@ -36,9 +36,9 @@ export function Navbar() {
                 key={href}
                 href={href}
                 className={cn(
-                  "transition-colors hover:text-foreground/80",
+                  "transition-colors ",
                   pathname === href || pathname?.startsWith(href)
-                    ? "text-foreground"
+                    ? "font-bold bg-gradient-to-r from-purple-500 to-sky-400 bg-clip-text text-transparent"
                     : "text-foreground/60",
                 )}
               >
