@@ -36,3 +36,23 @@ export const getAllphrases = async (queryParams?: string): Promise<PaginatedResp
     throw error;
   }
 };
+
+
+export const getPhraseById = async (id: string): Promise<any> => {
+  try {
+    const url = `${process.env.NEXT_PUBLIC_API_URL}/phrase/phrase/${id}`;
+    const res = await fetch(url, {
+      next: { tags: ['phrasal-verbs'] } // Optional: for Next.js caching
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to fetch phrase: ${res.statusText}`);
+    }
+
+    const data = await res.json();
+    return data;
+  } catch (error) {
+    console.error("Fetch failed:", error);
+    throw error;
+  } 
+};

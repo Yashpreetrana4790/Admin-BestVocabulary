@@ -1,123 +1,283 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PlusCircle, Trash2 } from 'lucide-react';
 import { Formik, Form, Field, FieldArray } from 'formik';
 import * as Yup from 'yup';
+import { toast } from 'sonner';
+import { ConfirmationPopup } from '@/components/AlertComponent';
+import { useState } from 'react';
+import { deletePhrase } from '../service/updatePhrase';
+import { useRouter } from 'next/navigation';
 
-// Define validation schema
 const PhrasalVerbSchema = Yup.object().shape({
-  phrase: Yup.string().required('Required'),
-  meaning: Yup.string().required('Required'),
-  example_sentences: Yup.array().of(Yup.string()),
+  phrase: Yup.string().required('Phrase is required'),
+  meaning: Yup.string().required('Meaning is required'),
+  example_sentences: Yup.array()
+    .of(Yup.string().required('Sentence cannot be empty'))
+    .min(1, 'At least one example sentence is required'),
   synonyms: Yup.array().of(Yup.string()),
   antonyms: Yup.array().of(Yup.string()),
   relatedWords: Yup.array().of(Yup.string()),
 });
 
-type Props = {
-  initialData: {
-    phrase: string;
-    meaning: string;
-    example_sentences: string[];
-    synonyms: string[];
-    antonyms: string[];
-    relatedWords: string[];
-  };
+type PhrasalVerbFormValues = {
+  phrase: string;
+  meaning: string;
+  example_sentences: string[];
+  synonyms: string[];
+  antonyms: string[];
+  relatedWords: string[];
 };
 
-export default function PhrasalVerbEditor({ initialData }: Props) {
+type Props = {
+  initialData: PhrasalVerbFormValues;
+  phraseId: string;
+};
 
-    const handleSubmit = async (values: any) => {
-      console.log(values,"values")
-      }
+export default function PhrasalVerbEditor({ initialData, phraseId }: Props) {
+  const router = useRouter();
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+
+  const handleSubmit = async (values: PhrasalVerbFormValues) => {
+    try {
+      // await onSubmit(values);
+      toast('Phrasal verb updated successfully', {
+        description: "Sunday, December 03, 2023 at 9:00 AM",
+      });
+    } catch (error) {
+      toast('Failed to update phrasal verb');
+    }
+  };
+
+  const handleDelete = async () => {
+    setIsSubmitting(true);
+
+    try {
+      const res = await deletePhrase(phraseId);
+      toast('Phrasal verb deleted successfully');
+      router.push('/phrasal-verbs');
+
+    } catch (error) {
+      toast('Failed to delete phrasal verb');
+    }
+    setIsSubmitting(false);
+  };
 
   return (
-    <Formik
-      initialValues={initialData}
-      validationSchema={PhrasalVerbSchema}
-      onSubmit={(values) => handleSubmit(values)}
-    >
-      {({ values, handleChange, handleBlur, errors, touched }) => (
-        <Form className="space-y-4 p-4">
-          <div>
-            <label>Phrase *</label>
-            <Field name="phrase" className="input" />
-            {touched.phrase && errors.phrase && <div className="text-red-500">{errors.phrase}</div>}
-          </div>
-
-          <div>
-            <label>Meaning *</label>
-            <Field name="meaning" className="input" />
-            {touched.meaning && errors.meaning && <div className="text-red-500">{errors.meaning}</div>}
-          </div>
-
-          {/* Repeatable Fields: Example Sentences */}
-          <FieldArray name="example_sentences">
-            {({ remove, push }) => (
-              <div>
-                <label>Example Sentences</label>
-                {values.example_sentences.map((sentence, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <Field name={`example_sentences.${index}`} className="input" />
-                    <Button type="button" onClick={() => remove(index)}>Remove</Button>
-                  </div>
-                ))}
-                <Button type="button" onClick={() => push('')}>Add Sentence</Button>
+    <Card className="w-full max-w-3xl mx-auto">
+      <CardHeader>
+        <CardTitle>Edit Phrasal Verb</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Formik
+          initialValues={initialData}
+          validationSchema={PhrasalVerbSchema}
+          onSubmit={handleSubmit}
+        >
+          {({ values, errors, touched, isSubmitting }) => (
+            <Form className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="phrase">Phrase *</Label>
+                <Field
+                  as={Input}
+                  id="phrase"
+                  name="phrase"
+                  placeholder="E.g., 'look up to'"
+                />
+                {touched.phrase && errors.phrase && (
+                  <p className="text-sm text-red-500">{errors.phrase}</p>
+                )}
               </div>
-            )}
-          </FieldArray>
 
-          {/* Synonyms */}
-          <FieldArray name="synonyms">
-            {({ remove, push }) => (
-              <div>
-                <label>Synonyms</label>
-                {values.synonyms.map((synonym, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <Field name={`synonyms.${index}`} className="input" />
-                    <Button type="button" onClick={() => remove(index)}>Remove</Button>
-                  </div>
-                ))}
-                <Button type="button" onClick={() => push('')}>Add Synonym</Button>
+              <div className="space-y-2">
+                <Label htmlFor="meaning">Meaning *</Label>
+                <Field
+                  as={Input}
+                  id="meaning"
+                  name="meaning"
+                  placeholder="E.g., 'to admire someone'"
+                />
+                {touched.meaning && errors.meaning && (
+                  <p className="text-sm text-red-500">{errors.meaning}</p>
+                )}
               </div>
-            )}
-          </FieldArray>
 
-          {/* Antonyms */}
-          <FieldArray name="antonyms">
-            {({ remove, push }) => (
-              <div>
-                <label>Antonyms</label>
-                {values.antonyms.map((antonym, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <Field name={`antonyms.${index}`} className="input" />
-                    <Button type="button" onClick={() => remove(index)}>Remove</Button>
-                  </div>
-                ))}
-                <Button type="button" onClick={() => push('')}>Add Antonym</Button>
+              <div className="space-y-2">
+                <Label>Example Sentences *</Label>
+                <FieldArray name="example_sentences">
+                  {({ remove, push }) => (
+                    <div className="space-y-3">
+                      {values.example_sentences.map((sentence, index) => (
+                        <div key={index} className="flex items-start gap-2">
+                          <Field
+                            as={Input}
+                            name={`example_sentences.${index}`}
+                            placeholder={`Example sentence ${index + 1}`}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => remove(index)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => push('')}
+                        className="gap-2"
+                      >
+                        <PlusCircle className="h-4 w-4" />
+                        Add Sentence
+                      </Button>
+                      {errors.example_sentences && typeof errors.example_sentences === 'string' && (
+                        <p className="text-sm text-red-500">{errors.example_sentences}</p>
+                      )}
+                    </div>
+                  )}
+                </FieldArray>
               </div>
-            )}
-          </FieldArray>
 
-          {/* Related Words */}
-          <FieldArray name="relatedWords">
-            {({ remove, push }) => (
-              <div>
-                <label>Related Words</label>
-                {values.relatedWords.map((word, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <Field name={`relatedWords.${index}`} className="input" />
-                    <Button type="button" onClick={() => remove(index)}>Remove</Button>
-                  </div>
-                ))}
-                <Button type="button" onClick={() => push('')}>Add Related Word</Button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label>Synonyms</Label>
+                  <FieldArray name="synonyms">
+                    {({ remove, push }) => (
+                      <div className="space-y-3">
+                        {values.synonyms.map((synonym, index) => (
+                          <div key={index} className="flex items-start gap-2">
+                            <Field
+                              as={Input}
+                              name={`synonyms.${index}`}
+                              placeholder="Synonym"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => remove(index)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => push('')}
+                          className="gap-2"
+                        >
+                          <PlusCircle className="h-4 w-4" />
+                          Add Synonym
+                        </Button>
+                      </div>
+                    )}
+                  </FieldArray>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Antonyms</Label>
+                  <FieldArray name="antonyms">
+                    {({ remove, push }) => (
+                      <div className="space-y-3">
+                        {values.antonyms.map((antonym, index) => (
+                          <div key={index} className="flex items-start gap-2">
+                            <Field
+                              as={Input}
+                              name={`antonyms.${index}`}
+                              placeholder="Antonym"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => remove(index)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => push('')}
+                          className="gap-2"
+                        >
+                          <PlusCircle className="h-4 w-4" />
+                          Add Antonym
+                        </Button>
+                      </div>
+                    )}
+                  </FieldArray>
+                </div>
               </div>
-            )}
-          </FieldArray>
 
-          <Button type="submit">Update</Button>
-        </Form>
-      )}
-    </Formik>
+              <div className="space-y-2">
+                <Label>Related Words</Label>
+                <FieldArray name="relatedWords">
+                  {({ remove, push }) => (
+                    <div className="space-y-3">
+                      {values.relatedWords.map((word, index) => (
+                        <div key={index} className="flex items-start gap-2">
+                          <Field
+                            as={Input}
+                            name={`relatedWords.${index}`}
+                            placeholder="Related word"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => remove(index)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => push('')}
+                        className="gap-2"
+                      >
+                        <PlusCircle className="h-4 w-4" />
+                        Add Related Word
+                      </Button>
+                    </div>
+                  )}
+                </FieldArray>
+              </div>
+
+              <div className="flex justify-end">
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
+              <div className="w-full gap-4 mt-8">
+                <ConfirmationPopup
+                  onConfirm={handleDelete}
+                  confirmText="Delete"
+                  variant="destructive"
+                  disabled={isSubmitting}
+                />
+              </div>
+            </Form>
+          )}
+        </Formik>
+      </CardContent>
+    </Card>
   );
 }
