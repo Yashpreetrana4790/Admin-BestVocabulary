@@ -108,7 +108,7 @@ const MeaningsUpdateForm = ({ wordId, initialMeanings }: MeaningsUpdateFormProps
     setIsSubmitting(true);
     try {
       // Process each meaning individually
-     await updateWordMeaningInfo(wordId, values.meanings );
+     await updateWordMeaningInfo(wordId, values?.meanings );
       alert('Meanings updated successfully!');
     } catch (error) {
       console.error('Error updating meanings:', error);
