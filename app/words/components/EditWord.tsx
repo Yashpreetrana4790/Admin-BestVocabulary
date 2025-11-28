@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import * as Yup from 'yup';
 import { updateBaseWordInfo } from '../service/updateWord';
+import { createWord } from '../service/createWord';
 import { useRouter } from 'next/navigation';
 import ChipInput from '@/components/ChipInput';
 
 interface WordFormProps {
-  wordId: string;
+  wordId?: string;
   word: string;
   pronunciation: string;
   frequency: string;
@@ -42,19 +43,51 @@ export default function BaseEditForm({
   misspellings
 }: WordFormProps) {
   const router = useRouter();
+  const isCreateMode = !wordId || wordId === '';
 
-  const handleEditBaseInfo = async (values: WordFormProps) => {
-    const res = await updateBaseWordInfo({ wordId, word: values.word, pronunciation: values.pronunciation, frequency: values.frequency, overall_tone: values.overall_tone, etymology: values.etymology, misspellings: values.misspellings });
+  const handleSubmit = async (values: WordFormProps) => {
+    try {
+      if (isCreateMode) {
+        // Create new word
+        const res = await createWord({
+          word: values.word,
+          pronunciation: values.pronunciation,
+          frequency: values.frequency,
+          overall_tone: values.overall_tone,
+          etymology: values.etymology,
+          misspellings: values.misspellings || []
+        });
 
-    if (res?.success === true) {
-      router.push('/words');
+        if (res?.success === true && res?.data?.word) {
+          // Redirect to edit page with the word text (as per the route structure)
+          router.push(`/words/${res.data.word}`);
+        }
+      } else {
+        // Update existing word
+        const res = await updateBaseWordInfo({ 
+          wordId, 
+          word: values.word, 
+          pronunciation: values.pronunciation, 
+          frequency: values.frequency, 
+          overall_tone: values.overall_tone, 
+          etymology: values.etymology, 
+          misspellings: values.misspellings 
+        });
+
+        if (res?.success === true) {
+          router.push('/words');
+        }
+      }
+    } catch (error) {
+      console.error('Error saving word:', error);
+      // Error handling could be improved with toast notifications
     }
   };
 
   return (
     <Card className="w-full ">
       <CardHeader>
-        <CardTitle>Edit Basic Details of Word</CardTitle>
+        <CardTitle>{isCreateMode ? 'Create New Word' : 'Edit Basic Details of Word'}</CardTitle>
       </CardHeader>
       <CardContent>
         <Formik 
@@ -62,13 +95,13 @@ export default function BaseEditForm({
             wordId: wordId || "",
             word: word || "",
             pronunciation: pronunciation || "",
-            frequency: String(frequency ?? ""),
+            frequency: String(frequency ?? "medium"),
             overall_tone: overall_tone || "",
             etymology: etymology || "",
             misspellings: misspellings || []
           }}
           validationSchema={validationSchema}
-          onSubmit={handleEditBaseInfo}
+          onSubmit={handleSubmit}
         >
           {({ isSubmitting, errors, touched, }) => (
             <Form className="space-y-4">
@@ -113,7 +146,7 @@ export default function BaseEditForm({
                 />
               </div>
               <Button type="submit" disabled={isSubmitting}>
-                Save Changes
+                {isCreateMode ? 'Create Word' : 'Save Changes'}
               </Button>
             </Form>
           )}

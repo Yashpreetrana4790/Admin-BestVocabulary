@@ -12,7 +12,18 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { updateWordMeaningInfo } from '../service/updateWord';
+import { useRouter } from 'next/navigation';
 
 interface CommonUsage {
   context: string;
@@ -74,6 +85,9 @@ const meaningValidationSchema = Yup.object().shape({
 const MeaningsUpdateForm = ({ wordId, initialMeanings }: MeaningsUpdateFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [openSections, setOpenSections] = useState<Record<number, boolean>>({});
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [meaningToDelete, setMeaningToDelete] = useState<number | null>(null);
+  const router = useRouter();
 
   React.useEffect(() => {
     const initialState: Record<number, boolean> = {};
@@ -94,13 +108,69 @@ const MeaningsUpdateForm = ({ wordId, initialMeanings }: MeaningsUpdateFormProps
     setIsSubmitting(true);
     try {
       // Process each meaning individually
-     await updateWordMeaningInfo(wordId, values.meanings );
+     await updateWordMeaningInfo(wordId, values?.meanings );
       alert('Meanings updated successfully!');
     } catch (error) {
       console.error('Error updating meanings:', error);
       alert('Failed to update meanings. Please try again.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Store the delete handler ref to access Formik context
+  const deleteHandlerRef = React.useRef<{
+    remove: (index: number) => void;
+    currentMeanings: Meaning[];
+  } | null>(null);
+
+  // Handle delete meaning with confirmation
+  const handleDeleteMeaning = (
+    remove: (index: number) => void,
+    currentMeanings: Meaning[],
+    indexToDelete: number
+  ) => {
+    // Store the handler and meaning index
+    deleteHandlerRef.current = { remove, currentMeanings };
+    setMeaningToDelete(indexToDelete);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (meaningToDelete === null || !deleteHandlerRef.current) return;
+
+    const { remove, currentMeanings } = deleteHandlerRef.current;
+    setIsSubmitting(true);
+    
+    try {
+      // Remove the meaning from the array
+      const updatedMeanings = currentMeanings.filter((_, index) => index !== meaningToDelete);
+      
+      // Immediately update the backend
+      await updateWordMeaningInfo(wordId, updatedMeanings);
+      
+      // Remove from formik state (this updates the UI immediately)
+      remove(meaningToDelete);
+      
+      // Close dialog and reset state
+      setDeleteDialogOpen(false);
+      setMeaningToDelete(null);
+      deleteHandlerRef.current = null;
+      
+      // Show success message
+      alert('Meaning deleted successfully!');
+      
+      // Refresh the page after a short delay to get latest data from server
+      setTimeout(() => {
+        router.refresh();
+      }, 500);
+    } catch (error) {
+      console.error('Error deleting meaning:', error);
+      alert('Failed to delete meaning. Please try again.');
+      setIsSubmitting(false);
+      setDeleteDialogOpen(false);
+      setMeaningToDelete(null);
+      deleteHandlerRef.current = null;
     }
   };
 
@@ -125,6 +195,32 @@ const MeaningsUpdateForm = ({ wordId, initialMeanings }: MeaningsUpdateFormProps
 
   return (
     <div className="space-y-6 w-full">
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Meaning?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this meaning? This action cannot be undone and will permanently remove the meaning from the database.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setDeleteDialogOpen(false);
+              setMeaningToDelete(null);
+            }}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Formik
         initialValues={initialValues}
         onSubmit={handleSubmit}
@@ -170,8 +266,8 @@ const MeaningsUpdateForm = ({ wordId, initialMeanings }: MeaningsUpdateFormProps
                           variant="destructive"
                           size="sm"
                           className="cursor-pointer"
-                          onClick={() => remove(meaningIndex)}
-                          disabled={values.meanings.length <= 1}
+                          onClick={() => handleDeleteMeaning(remove, values.meanings, meaningIndex)}
+                          disabled={values.meanings.length <= 1 || isSubmitting}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

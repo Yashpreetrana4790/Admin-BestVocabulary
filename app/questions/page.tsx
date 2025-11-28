@@ -45,16 +45,29 @@ type Question = {
 
 const QuestionsPage = async ({ searchParams }: { searchParams: { page: string, search: string } }) => {
   const page = searchParams.page ? parseInt(searchParams.page) : 1;
-  const { data: questions, pagination } = await getAllQuestions(page, 10);
 
+  try {
+    const { data: questions, pagination } = await getAllQuestions(page, 10);
 
+    console.log(questions, "questionsLL")
 
-  console.log(questions, "questionsLL")
-  return (
-    <>
-      <SearchBar route="/questions" />
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 p-6">
-        {questions.map((q: Question) => (
+    // Handle empty results
+    if (!questions || questions.length === 0) {
+      return (
+        <>
+          <SearchBar route="/questions" showAdvanced={false} title="All Questions" />
+          <div className="text-center py-8 text-muted-foreground">
+            No questions found. Please add some questions first.
+          </div>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <SearchBar route="/questions" showAdvanced={false} title="All Questions" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 p-6">
+          {questions.map((q: Question) => (
 
           <div
             key={q._id}
@@ -97,15 +110,32 @@ const QuestionsPage = async ({ searchParams }: { searchParams: { page: string, s
           </div>
         ))}
       </div>
-      <PaginationControls
-        currentPage={pagination.currentPage}
-        totalPages={pagination.totalPages}
-        itemsPerPage={pagination.itemsPerPage}
-        totalItems={pagination.totalItems}
-      />
-    </>
-
-  );
+        <PaginationControls
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          itemsPerPage={pagination.itemsPerPage}
+          totalItems={pagination.totalItems}
+        />
+      </>
+    );
+  } catch (error) {
+    console.error('Error loading questions:', error);
+    return (
+      <>
+        <SearchBar route="/questions" showAdvanced={false} title="All Questions" />
+        <div className="p-4">
+          <div className="text-center text-destructive py-8">
+            <p className="font-semibold mb-2">Failed to load questions.</p>
+            <p className="text-sm text-muted-foreground">
+              {process.env.NODE_ENV === 'development' && error instanceof Error
+                ? error.message
+                : 'Please check your connection and try again later.'}
+            </p>
+          </div>
+        </div>
+      </>
+    );
+  }
 };
 
 export default QuestionsPage;

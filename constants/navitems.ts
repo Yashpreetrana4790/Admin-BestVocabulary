@@ -1,8 +1,9 @@
 export const navbarItems = [
-  { label: "Dashboard", href: "/dashboard" },
+  { label: "Dashboard", href: "/" },
   { label: "Words", href: "/words" },
   { label: "Phrasal Verbs Expression", href: "/phrasal-verbs" },
-  { label: "Word of the Day", href: "/word-of-the-day" },
+  { label: "Idioms", href: "/idioms" },
+  { label: "Categories", href: "/categories" },
   { label: "Questions", href: "/questions" },
 ];
 

@@ -26,7 +26,7 @@ export function Navbar() {
       <div className="px-4  flex h-14 w-full items-center ">
         {/* <MainNav /> */}
         <div className="mr-4 hidden md:flex">
-          <Link href="/dashboard" className="mr-6 flex items-center space-x-2">
+          <Link href="/" className="mr-6 flex items-center space-x-2">
             <Crown />
             <span className=" font-bold ">Logophile</span>
           </Link>
