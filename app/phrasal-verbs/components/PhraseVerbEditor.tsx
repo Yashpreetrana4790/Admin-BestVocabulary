@@ -113,7 +113,7 @@ export default function PhrasalVerbEditor({ initialData, phraseId }: Props) {
                 <FieldArray name="example_sentences">
                   {({ remove, push }) => (
                     <div className="space-y-3">
-                      {values.example_sentences.map((sentence, index) => (
+                      {values.example_sentences?.length > 0 && values.example_sentences?.map((sentence, index) => (
                         <div key={index} className="flex items-start gap-2">
                           <Field
                             as={Input}
@@ -154,7 +154,7 @@ export default function PhrasalVerbEditor({ initialData, phraseId }: Props) {
                   <FieldArray name="synonyms">
                     {({ remove, push }) => (
                       <div className="space-y-3">
-                        {values.synonyms.map((synonym, index) => (
+                        {values.synonyms?.length > 0 && values?.synonyms?.map((synonym, index) => (
                           <div key={index} className="flex items-start gap-2">
                             <Field
                               as={Input}
@@ -191,7 +191,7 @@ export default function PhrasalVerbEditor({ initialData, phraseId }: Props) {
                   <FieldArray name="antonyms">
                     {({ remove, push }) => (
                       <div className="space-y-3">
-                        {values.antonyms.map((antonym, index) => (
+                        {values.antonyms?.length > 0 && values?.antonyms?.map((antonym, index) => (
                           <div key={index} className="flex items-start gap-2">
                             <Field
                               as={Input}
@@ -229,7 +229,7 @@ export default function PhrasalVerbEditor({ initialData, phraseId }: Props) {
                 <FieldArray name="relatedWords">
                   {({ remove, push }) => (
                     <div className="space-y-3">
-                      {values.relatedWords.map((word, index) => (
+                      {values.relatedWords?.length > 0 && values?.relatedWords?.map((word, index) => (
                         <div key={index} className="flex items-start gap-2">
                           <Field
                             as={Input}

@@ -8,8 +8,6 @@ interface WordFormProps {
   overall_tone: string;
   etymology: string;
   misspellings: string[]
-
-
 }
 
 

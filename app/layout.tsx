@@ -7,8 +7,8 @@ import { Toaster } from 'sonner'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Best Vocabulary Admin Dashboard',
-  description: 'Admin dashboard for managing vocabulary content',
+  title: 'Best Vocabulary Admin',
+  description: 'Admin portal for managing Best Vocabulary content',
 }
 
 export default function RootLayout({
@@ -17,12 +17,12 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning >
-      <body className={inter.className} suppressHydrationWarning >
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className} suppressHydrationWarning>
         <Navbar />
-        <Toaster />
+        <Toaster richColors position="top-right" />
         {children}
       </body>
     </html>
   )
-} 
+}

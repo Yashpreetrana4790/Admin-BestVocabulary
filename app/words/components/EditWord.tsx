@@ -16,6 +16,7 @@ interface WordFormProps {
   frequency: string;
   overall_tone: string;
   etymology: string;
+  note: string;
   misspellings: string[]
 }
 
@@ -24,9 +25,13 @@ const validationSchema = Yup.object({
   pronunciation: Yup.string().required("Pronunciation is required"),
   frequency: Yup.string().oneOf(['high', 'medium', 'low']).required("Frequency is required"),
   overall_tone: Yup.string(),
+  note: Yup.string().max(200, "Note must be 200 characters or less"),
+
   etymology: Yup.string(),
   misspellings: Yup.array().of(Yup.string())
 });
+
+
 
 
 
@@ -39,12 +44,12 @@ export default function BaseEditForm({
   frequency,
   overall_tone,
   etymology,
+  note,
   misspellings
 }: WordFormProps) {
   const router = useRouter();
-
   const handleEditBaseInfo = async (values: WordFormProps) => {
-    const res = await updateBaseWordInfo({ wordId, word: values.word, pronunciation: values.pronunciation, frequency: values.frequency, overall_tone: values.overall_tone, etymology: values.etymology, misspellings: values.misspellings });
+    const res = await updateBaseWordInfo({ wordId, word: values.word, pronunciation: values.pronunciation, frequency: values.frequency, overall_tone: values.overall_tone, etymology: values.etymology, misspellings: values.misspellings, note: values.note });
 
     if (res?.success === true) {
       router.push('/words');
@@ -57,7 +62,7 @@ export default function BaseEditForm({
         <CardTitle>Edit Basic Details of Word</CardTitle>
       </CardHeader>
       <CardContent>
-        <Formik 
+        <Formik
           initialValues={{
             wordId: wordId || "",
             word: word || "",
@@ -65,6 +70,7 @@ export default function BaseEditForm({
             frequency: String(frequency ?? ""),
             overall_tone: overall_tone || "",
             etymology: etymology || "",
+            note: note || "",
             misspellings: misspellings || []
           }}
           validationSchema={validationSchema}
@@ -105,6 +111,12 @@ export default function BaseEditForm({
                 <Field as={Input} id="overall_tone" name="overall_tone" placeholder="Enter overall tone" />
                 {touched.overall_tone && errors.overall_tone && <p className="text-red-500 text-sm">{errors.overall_tone}</p>}
               </div>
+              <div>
+                <label htmlFor="note" className="block text-sm font-medium text-gray-700 mb-1">note</label>
+                <Field as={Input} id="note" name="note" placeholder="Enter note" />
+                {touched.note && errors.note && <p className="text-red-500 text-sm">{errors.note}</p>}
+              </div>
+
               <div>
                 <ChipInput
                   name="misspellings"
