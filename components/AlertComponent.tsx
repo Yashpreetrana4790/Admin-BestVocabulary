@@ -26,6 +26,7 @@ interface ConfirmationPopupProps {
   size?: "default" | "sm" | "lg" | "icon";
   icon?: boolean;
   disabled?: boolean;
+  className?: string;
 }
 
 export function ConfirmationPopup({
@@ -38,7 +39,7 @@ export function ConfirmationPopup({
   size = "default",
   icon = true,
   disabled = false,
-
+  className,
 }: ConfirmationPopupProps) {
   const [open, setOpen] = useState(false);
 
@@ -50,7 +51,7 @@ export function ConfirmationPopup({
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
-        <Button variant={variant} size={size} className='w-full'>
+        <Button variant={variant} size={size} className={className} disabled={disabled}>
           {icon && <Trash2 className="mr-2 h-4 w-4" />}
           {confirmText}
         </Button>

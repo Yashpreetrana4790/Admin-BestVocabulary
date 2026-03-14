@@ -4,9 +4,8 @@ import Link from "next/link";
 import { getWord } from "../service/getWords";
 import BaseEditForm from "../components/EditWord";
 import MeaningsUpdateForm from "../components/MeaningsUpdateForm";
-import { WordRelationsTab } from "../components/WordRelationsTab";
+import RelationshipsSection from "../components/RelationshipsSection";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
 type WordProp = {
@@ -19,22 +18,12 @@ type WordProp = {
 export default async function WordDetailPage({ params }: WordProp) {
 
   const { word } = params;
-  const decodedWord = decodeURIComponent(word);
-  const wordData = await getWord(decodedWord);
   
-  // Debug logging
-  console.log('📄 Word detail page - wordData received:', {
-    hasData: !!wordData,
-    word: wordData?.word,
-    hasMeanings: !!wordData?.meanings,
-    meaningsCount: wordData?.meanings?.length || 0,
-    hasEtymology: !!wordData?.etymology,
-    hasPronunciation: !!wordData?.pronunciation,
-    meaningsPreview: wordData?.meanings?.slice(0, 2).map((m: any) => ({ 
-      pos: m?.pos, 
-      meaning: m?.meaning?.substring(0, 50) 
-    })) || []
-  });
+  // Decode the word parameter in case it's URL-encoded
+  const decodedWord = decodeURIComponent(word);
+  
+  try {
+    const wordData = await getWord(decodedWord);
 
   // Handle error case - word not found or fetch failed
   if (!wordData) {
@@ -78,79 +67,67 @@ export default async function WordDetailPage({ params }: WordProp) {
     ? wordData._id.$oid 
     : (wordData._id || '');
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+    return (
       <div className="container mx-auto py-8 px-4 max-w-9xl">
-        {/* Header */}
-        <div className="mb-8">
+        <div className="flex justify-between items-center mb-6">
           <Link href="/words">
-            <Button variant="outline" size="sm" className="mb-4">
+            <Button variant="outline" size="sm">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Vocabulary
             </Button>
           </Link>
-          <div className="flex items-center gap-4 mb-6">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 shadow-lg">
-              <BookOpen className="h-8 w-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 bg-clip-text text-transparent">
-                {wordData?.word || 'Word Details'}
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                {wordData?.pronunciation && `/${wordData.pronunciation}/`}
-              </p>
-            </div>
-          </div>
-
-          {/* Tabs */}
-          <Tabs defaultValue="details" className="w-full">
-            <TabsList className="grid w-full max-w-md grid-cols-2">
-              <TabsTrigger value="details" className="flex items-center gap-2">
-                <BookOpen className="h-4 w-4" />
-                Details & Meanings
-              </TabsTrigger>
-              <TabsTrigger value="relations" className="flex items-center gap-2">
-                <Shuffle className="h-4 w-4" />
-                Relations
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="details" className="mt-6">
-              {/* Content Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="space-y-6">
-                  <BaseEditForm
-                    word={wordData?.word || ''}
-                    pronunciation={wordData?.pronunciation || ''}
-                    frequency={wordData?.frequency || ''}
-                    overall_tone={wordData?.overall_tone || ''}
-                    wordId={wordId}
-                    etymology={wordData?.etymology || ''}
-                    misspellings={wordData?.misspellings || []}
-                    note={wordData?.note || ''}
-                  />
-                </div>
-                <div className="space-y-6">
-                  <MeaningsUpdateForm
-                    wordId={wordId}
-                    initialMeanings={wordData?.meanings || []}
-                  />
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="relations" className="mt-6">
-              <WordRelationsTab
-                wordId={wordId}
-                currentWord={wordData?.word || ''}
-                initialSynonyms={[]}
-                initialAntonyms={[]}
+        </div>
+        <div className="space-y-6">
+          <div className="flex gap-5">
+            <div className="w-1/2">
+              <BaseEditForm
+                word={wordData?.word}
+                pronunciation={wordData?.pronunciation}
+                frequency={wordData?.frequency}
+                overall_tone={wordData?.overall_tone}
+                wordId={wordData?._id}
+                etymology={wordData?.etymology}
+                misspellings={wordData?.misspellings}
+                note={wordData?.note || ''}
               />
-            </TabsContent>
-          </Tabs>
+            </div>
+            <MeaningsUpdateForm
+              wordId={wordData?._id}
+              initialMeanings={wordData?.meanings}
+            />
+          </div>
+          
+          {/* Relationships Section */}
+          <RelationshipsSection
+            wordId={wordData?._id}
+            currentWord={wordData?.word}
+            meanings={wordData?.meanings || []}
+          />
         </div>
       </div>
-    </div>
-  );
+    );
+  } catch (error) {
+    console.error('Error loading word:', error);
+    return (
+      <div className="container mx-auto py-8 px-4 max-w-9xl">
+        <div className="flex justify-between items-center mb-6">
+          <Link href="/words">
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Vocabulary
+            </Button>
+          </Link>
+        </div>
+        <div className="text-center text-destructive py-8">
+          <p className="font-semibold mb-2">Failed to load word.</p>
+          <p className="text-sm text-muted-foreground">
+            {error instanceof Error ? error.message : 'Word not found. Please check if the word exists.'}
+          </p>
+          <p className="text-xs text-muted-foreground mt-2">
+            Searching for: "{decodedWord}"
+          </p>
+        </div>
+      </div>
+    );
+  }
 }

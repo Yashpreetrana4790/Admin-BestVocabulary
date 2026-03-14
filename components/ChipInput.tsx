@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useField } from 'formik';
-import { Input } from './ui/input';
+import { Input } from '@/components/ui/input';
 import { X } from 'lucide-react';
 
 interface ChipInputProps {
@@ -22,34 +22,39 @@ export default function ChipInput({
   const [field, meta, helpers] = useField<string[]>(name);
   const [inputValue, setInputValue] = useState('');
 
+  // Ensure field.value is always an array
+  const fieldValue = Array.isArray(field.value) ? field.value : [];
+
   // Initialize with initialItems if field value is empty
   useEffect(() => {
-    if (field.value.length === 0 && initialItems.length > 0) {
+    if (!Array.isArray(field.value)) {
+      helpers.setValue([]);
+    } else if (fieldValue.length === 0 && initialItems && initialItems.length > 0) {
       helpers.setValue(initialItems);
     }
-  }, [initialItems]);
+  }, [initialItems, field.value, helpers, fieldValue.length]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (['Enter', ','].includes(e.key) && inputValue.trim() !== '') {
       e.preventDefault();
       addChip(inputValue.trim());
-    } else if (e.key === 'Backspace' && inputValue === '' && field.value.length > 0) {
+    } else if (e.key === 'Backspace' && inputValue === '' && fieldValue.length > 0) {
       // Remove last chip when backspace is pressed on empty input
       e.preventDefault();
-      removeChip(field.value.length - 1);
+      removeChip(fieldValue.length - 1);
     }
   };
 
   const addChip = (value: string) => {
-    if (!field.value.includes(value)) { // Prevent duplicates
-      const newChips = [...field.value, value];
+    if (!fieldValue.includes(value)) { // Prevent duplicates
+      const newChips = [...fieldValue, value];
       helpers.setValue(newChips);
     }
     setInputValue('');
   };
 
   const removeChip = (index: number) => {
-    const updated = field.value.filter((_, i) => i !== index);
+    const updated = fieldValue.filter((_, i) => i !== index);
     helpers.setValue(updated);
   };
 
@@ -72,7 +77,7 @@ export default function ChipInput({
       />
       
       <div className="flex flex-wrap gap-2 mt-2 min-h-8">
-        {field.value.map((chip, idx) => (
+        {fieldValue.map((chip, idx) => (
           <div key={`${chip}-${idx}`} className="flex items-center bg-gray-100 rounded-sm px-3 py-1 text-sm">
             {chip}
             <button 

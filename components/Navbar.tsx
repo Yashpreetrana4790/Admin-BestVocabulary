@@ -30,22 +30,12 @@ export function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80">
-      <div className="px-4 sm:px-6 flex h-16 items-center justify-between">
-        {/* Logo & Desktop Nav */}
-        <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center space-x-2.5 group">
-            <div className="p-1.5 rounded-lg bg-primary shadow-sm group-hover:shadow-md transition-shadow">
-              <Crown className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-lg font-bold text-foreground leading-tight">
-                Best Vocabulary
-              </span>
-              <span className="text-[10px] text-muted-foreground font-medium -mt-0.5">
-                Admin Portal
-              </span>
-            </div>
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="px-4  flex h-14 w-full items-center ">
+        <div className="mr-4 hidden md:flex">
+          <Link href="/" className="mr-6 flex items-center space-x-2">
+            <Crown />
+            <span className=" font-bold ">Logophile</span>
           </Link>
           
           {/* Desktop Navigation */}
@@ -68,7 +58,7 @@ export function Navbar() {
         </div>
 
         {/* Right Side */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 ml-auto">
           {/* Mobile Menu Toggle */}
           <button
             className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors"
