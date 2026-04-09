@@ -9,11 +9,18 @@ export interface WordReference {
   meaning?: string;
 }
 
+export type ExampleSentenceItem = string | { text: string; context?: string; source?: string; register?: string };
+
 export interface WordMeaning {
   pos?: string;
   subtitle?: string;
   pronunciation?: string;
   common_usage?: {
+    context: string;
+    example: string;
+  }[];
+  /** Canonical (API / Mongoose alias) */
+  commonUsage?: {
     context: string;
     example: string;
   }[];
@@ -24,7 +31,9 @@ export interface WordMeaning {
   mnemonic?: string;
   easyMeaning?: string;
   kiddefinition?: string;
-  example_sentences: string[];
+  kidDefinition?: string;
+  example_sentences?: ExampleSentenceItem[];
+  exampleSentences?: ExampleSentenceItem[];
   notes?: string;
   synonyms?: WordReference[];  // Using WordReference instead of WordData
   antonyms?: WordReference[];  // Using WordReference instead of WordData
@@ -69,9 +78,15 @@ export interface WordData {
   pronunciation?: string;
   frequency?: string;
   overall_tone?: string;
+  overallTone?: string;
+  note?: string;
   etymology: string;
   misspellings: string[];
   usage_distribution?: {
+    spoken: number;
+    written: number;
+  };
+  usageDistribution?: {
     spoken: number;
     written: number;
   };
@@ -80,9 +95,15 @@ export interface WordData {
     inflected?: string[];
     derived?: string[];
   };
+  wordFamily?: {
+    base: string;
+    inflected?: string[];
+    derived?: string[];
+  };
   meanings: WordMeaning[];
   expressions?: Expression[]
   PhrasalVerbs?: PhrasalVerb[];
+  phrasalVerbs?: PhrasalVerb[];
   questions?: WordQuestion[];
   collocations?: any[];
   historical_usage?: string;

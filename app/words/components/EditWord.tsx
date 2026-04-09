@@ -9,23 +9,31 @@ import { updateBaseWordInfo } from '../service/updateWord';
 import { createWord } from '../service/createWord';
 import { useRouter } from 'next/navigation';
 import ChipInput from '@/components/ChipInput';
+import {
+  WORD_OVERALL_TONE_VALUES,
+  WORD_OVERALL_TONE_LABELS,
+  normalizeOverallToneForForm,
+} from '@/lib/wordOverallTone';
 
 interface WordFormProps {
   wordId?: string;
   word: string;
   pronunciation: string;
   frequency: string;
+  /** Legacy API key; initial value can also come from `overallTone` prop */
   overall_tone: string;
+  /** Canonical API key (optional); merged into form initial overall_tone */
+  overallTone?: string;
   etymology: string;
   note: string;
-  misspellings: string[]
+  misspellings: string[];
 }
 
 const validationSchema = Yup.object({
   word: Yup.string().required("Word is required"),
   pronunciation: Yup.string().required("Pronunciation is required"),
   frequency: Yup.string().oneOf(['high', 'medium', 'low']).required("Frequency is required"),
-  overall_tone: Yup.string(),
+  overall_tone: Yup.string().oneOf([...WORD_OVERALL_TONE_VALUES, ''], 'Select a valid tone or leave blank'),
   note: Yup.string().max(200, "Note must be 200 characters or less"),
   etymology: Yup.string(),
   misspellings: Yup.array().of(Yup.string())
@@ -37,6 +45,7 @@ export default function BaseEditForm({
   pronunciation,
   frequency,
   overall_tone,
+  overallTone,
   etymology,
   note,
   misspellings
@@ -44,7 +53,10 @@ export default function BaseEditForm({
   const router = useRouter();
   const isCreateMode = !wordId || wordId === '';
 
+  const initialTone = normalizeOverallToneForForm(overall_tone || overallTone);
+
   const handleSubmit = async (values: WordFormProps) => {
+    const tone = values.overall_tone?.trim() || undefined;
     try {
       if (isCreateMode) {
         // Create new word
@@ -52,9 +64,11 @@ export default function BaseEditForm({
           word: values.word,
           pronunciation: values.pronunciation,
           frequency: values.frequency,
-          overall_tone: values.overall_tone,
+          overall_tone: tone,
+          overallTone: tone,
           etymology: values.etymology,
-          misspellings: values.misspellings || []
+          misspellings: values.misspellings || [],
+          note: values.note || undefined,
         });
 
         if (res?.success === true && res?.data?.word) {
@@ -68,7 +82,8 @@ export default function BaseEditForm({
           word: values.word, 
           pronunciation: values.pronunciation, 
           frequency: values.frequency, 
-          overall_tone: values.overall_tone, 
+          overall_tone: tone,
+          overallTone: tone,
           etymology: values.etymology, 
           misspellings: values.misspellings,
           note: values.note
@@ -95,7 +110,7 @@ export default function BaseEditForm({
             word: word || "",
             pronunciation: pronunciation || "",
             frequency: String(frequency ?? "medium"),
-            overall_tone: overall_tone || "",
+            overall_tone: initialTone,
             etymology: etymology || "",
             note: note || "",
             misspellings: misspellings || []
@@ -134,9 +149,28 @@ export default function BaseEditForm({
                 {touched.etymology && errors.etymology && <p className="text-red-500 text-sm">{errors.etymology}</p>}
               </div>
               <div>
-                <label htmlFor="overall_tone" className="block text-sm font-medium text-gray-700 mb-1">Overall Tone</label>
-                <Field as={Input} id="overall_tone" name="overall_tone" placeholder="Enter overall tone" />
-                {touched.overall_tone && errors.overall_tone && <p className="text-red-500 text-sm">{errors.overall_tone}</p>}
+                <label htmlFor="overall_tone" className="block text-sm font-medium text-gray-700 mb-1">
+                  Overall tone
+                </label>
+                <Field
+                  as="select"
+                  id="overall_tone"
+                  name="overall_tone"
+                  className="w-full p-2 border rounded-md bg-background text-foreground"
+                >
+                  <option value="">Not set</option>
+                  {WORD_OVERALL_TONE_VALUES.map((value) => (
+                    <option key={value} value={value}>
+                      {WORD_OVERALL_TONE_LABELS[value]}
+                    </option>
+                  ))}
+                </Field>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Matches dictionary schema: formal, informal, neutral, academic, technical, colloquial, literary.
+                </p>
+                {touched.overall_tone && errors.overall_tone && (
+                  <p className="text-red-500 text-sm">{errors.overall_tone}</p>
+                )}
               </div>
               <div>
                 <label htmlFor="note" className="block text-sm font-medium text-gray-700 mb-1">note</label>

@@ -51,8 +51,23 @@ export const getWords = async (params: GetWordsParams = {}) => {
 
     const data = await res.json();
 
-    // Normalize the response to always have 'words' property
+    // Backend: successResponse(res, { words, pagination }, ...) -> { success, data: { words, pagination } }
     if (data && typeof data === 'object' && !Array.isArray(data)) {
+      const inner = data.data;
+
+      if (inner && typeof inner === 'object' && !Array.isArray(inner) && Array.isArray(inner.words)) {
+        return {
+          words: inner.words,
+          pagination:
+            inner.pagination || {
+              currentPage: params.page || 1,
+              totalPages: 0,
+              totalItems: inner.words.length,
+              itemsPerPage: params.limit || 12,
+            },
+        };
+      }
+
       if (Array.isArray(data.data)) {
         return {
           words: data.data,

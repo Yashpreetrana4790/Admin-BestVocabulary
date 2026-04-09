@@ -1,5 +1,5 @@
-import { getHomophoneById } from '../../service/categoriesService';
-import HomophoneForm from '../components/HomophoneForm';
+import { getHomophoneById } from '../../../service/categoriesService';
+import HomophoneForm from '../../components/HomophoneForm';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';

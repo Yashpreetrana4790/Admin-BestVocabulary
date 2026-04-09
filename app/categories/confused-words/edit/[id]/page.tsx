@@ -1,5 +1,5 @@
-import { getConfusedWordsById } from '../../service/categoriesService';
-import ConfusedWordsForm from '../components/ConfusedWordsForm';
+import { getConfusedWordsById } from '../../../service/categoriesService';
+import ConfusedWordsForm from '../../components/ConfusedWordsForm';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';

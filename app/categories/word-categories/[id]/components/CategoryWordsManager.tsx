@@ -1,15 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import WordSearch from '@/components/WordSearch';
 import { addWordToCategory, removeWordFromCategory } from '../../service/categoryService';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { Trash2, Plus, GripVertical } from 'lucide-react';
-import WordCard from '@/components/WordCard';
+import { Plus, BookOpen, Volume2, Trash2, Search, Sparkles } from 'lucide-react';
 import { PaginationControls } from '@/components/PaginationControl';
 import Link from 'next/link';
 import { ConfirmationPopup } from '@/components/AlertComponent';
@@ -60,7 +58,6 @@ export default function CategoryWordsManager({
       await addWordToCategory(categoryId, wordOption._id);
       toast.success(`"${wordOption.word}" added to ${categoryName}`);
       router.refresh();
-      // Reset search by reloading
       window.location.reload();
     } catch (error: any) {
       toast.error(error?.message || 'Failed to add word to category');
@@ -114,112 +111,141 @@ export default function CategoryWordsManager({
   return (
     <div className="space-y-6">
       {/* Add Word Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Add Words to Category</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <WordSearch
-              value=""
-              onChange={handleAddWord}
-              placeholder="Search for words to add to this category..."
-              label="Search Words"
-            />
-            <p className="text-xs text-muted-foreground">
-              💡 Search for words and click to add them, or drag words from search results into the category box below
-            </p>
+      <div className="rounded-2xl border bg-card p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 rounded-xl bg-blue-500/10">
+            <Search className="h-5 w-5 text-blue-600" />
           </div>
+          <div>
+            <h2 className="font-semibold text-foreground">Add Words</h2>
+            <p className="text-sm text-muted-foreground">Search and add words to this category</p>
+          </div>
+        </div>
+        
+        <div className="space-y-4">
+          <WordSearch
+            value=""
+            onChange={handleAddWord}
+            placeholder="Search for words to add..."
+            label=""
+          />
 
           {/* Drop Zone */}
           <div
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            className={`min-h-[120px] border-2 border-dashed rounded-lg p-6 flex items-center justify-center transition-all ${
+            className={`min-h-[100px] border-2 border-dashed rounded-xl p-6 flex items-center justify-center transition-all ${
               dragOver
-                ? 'border-primary bg-primary/10'
-                : 'border-gray-300 dark:border-gray-700'
+                ? 'border-primary bg-primary/5'
+                : 'border-muted-foreground/20 hover:border-muted-foreground/40'
             }`}
           >
             <div className="text-center">
-              <Plus className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+              <div className={`p-3 rounded-full mx-auto mb-3 ${dragOver ? 'bg-primary/10' : 'bg-muted'}`}>
+                <Plus className={`h-6 w-6 ${dragOver ? 'text-primary' : 'text-muted-foreground'}`} />
+              </div>
               <p className="text-sm font-medium text-muted-foreground">
-                Drop words here to add to {categoryName}
+                {dragOver ? 'Drop to add word' : 'Drag words here'}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                Or search above and click to add
+                Or use the search above
               </p>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Words in Category */}
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>
-              Words in {categoryName}
-              <Badge variant="outline" className="ml-2">
-                {pagination.totalItems}
-              </Badge>
-            </CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {words && words.length > 0 ? (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                {words.map((word) => (
-                  <div
-                    key={word._id}
-                    className="relative group border rounded-lg p-4 hover:shadow-md transition-shadow"
-                  >
-                    <Link href={`/words/${word.word}`} className="block">
-                      <div className="font-semibold text-lg mb-1">{word.word}</div>
-                      {word.pronunciation && (
-                        <div className="text-sm text-muted-foreground mb-2">
-                          {word.pronunciation}
-                        </div>
-                      )}
-                      {word.meanings && word.meanings.length > 0 && (
-                        <div className="text-sm text-muted-foreground line-clamp-2">
-                          {word.meanings[0].meaning}
-                        </div>
-                      )}
-                    </Link>
-                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <ConfirmationPopup
-                        onConfirm={() => handleRemoveWord(word._id, word.word)}
-                        confirmText="Remove"
-                        variant="destructive"
-                        size="icon"
-                        className="h-8 w-8"
-                        disabled={removingId === word._id}
-                        title="Remove Word from Category"
-                        description={`Are you sure you want to remove "${word.word}" from ${categoryName}? The word itself will not be deleted.`}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <PaginationControls
-                currentPage={pagination.currentPage}
-                totalPages={pagination.totalPages}
-                itemsPerPage={pagination.itemsPerPage}
-                totalItems={pagination.totalItems}
-              />
-            </>
-          ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              <p className="text-lg mb-2">No words in this category yet</p>
-              <p className="text-sm">Search above to add words to {categoryName}</p>
+      <div className="rounded-2xl border bg-card p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-emerald-500/10">
+              <BookOpen className="h-5 w-5 text-emerald-600" />
             </div>
-          )}
-        </CardContent>
-      </Card>
+            <div>
+              <h2 className="font-semibold text-foreground">Words in Category</h2>
+              <p className="text-sm text-muted-foreground">{pagination.totalItems} word{pagination.totalItems !== 1 ? 's' : ''} total</p>
+            </div>
+          </div>
+        </div>
+
+        {words && words.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
+              {words.map((word) => (
+                <div
+                  key={word._id}
+                  className="group relative rounded-xl border bg-background p-4 hover:shadow-lg hover:border-blue-300 transition-all duration-300"
+                >
+                  <Link href={`/words/${word.word}`} className="block">
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors">
+                        {word.word}
+                      </h3>
+                      {word.frequency && (
+                        <Badge variant="outline" className="text-xs bg-background">
+                          {word.frequency}
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    {word.pronunciation && (
+                      <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-2">
+                        <Volume2 className="h-3.5 w-3.5" />
+                        <span>/{word.pronunciation}/</span>
+                      </div>
+                    )}
+                    
+                    {word.meanings && word.meanings.length > 0 && (
+                      <div className="space-y-1">
+                        {word.meanings[0].pos && (
+                          <Badge variant="secondary" className="text-xs">
+                            {word.meanings[0].pos}
+                          </Badge>
+                        )}
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {word.meanings[0].meaning}
+                        </p>
+                      </div>
+                    )}
+                  </Link>
+                  
+                  <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <ConfirmationPopup
+                      onConfirm={() => handleRemoveWord(word._id, word.word)}
+                      confirmText="Remove"
+                      variant="destructive"
+                      size="icon"
+                      className="h-8 w-8 rounded-lg"
+                      disabled={removingId === word._id}
+                      title="Remove from Category"
+                      description={`Remove "${word.word}" from ${categoryName}? The word won't be deleted.`}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <PaginationControls
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              itemsPerPage={pagination.itemsPerPage}
+              totalItems={pagination.totalItems}
+            />
+          </>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="p-4 rounded-2xl bg-muted mb-6">
+              <Sparkles className="h-10 w-10 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-2">No words yet</h3>
+            <p className="text-muted-foreground max-w-sm">
+              Start building your category by searching for words above and adding them here.
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
-

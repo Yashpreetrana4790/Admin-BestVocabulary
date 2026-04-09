@@ -54,6 +54,21 @@ interface MeaningsUpdateFormProps {
   initialMeanings: Meaning[];
 }
 
+/** API may return example_sentences as strings or { text } objects (Word schema v2). */
+function exampleSentencesToFormStrings(raw: unknown): string[] {
+  if (!Array.isArray(raw) || raw.length === 0) return [''];
+  const out = raw
+    .map((item) => {
+      if (typeof item === 'string') return item;
+      if (item && typeof item === 'object' && 'text' in item && typeof (item as { text: unknown }).text === 'string') {
+        return (item as { text: string }).text;
+      }
+      return '';
+    })
+    .filter((s) => s.trim() !== '');
+  return out.length > 0 ? out : [''];
+}
+
 const meaningValidationSchema = Yup.object().shape({
   meanings: Yup.array().of(
     Yup.object().shape({
@@ -103,27 +118,38 @@ const normalizeMeanings = (meanings: Meaning[]): Meaning[] => {
     }];
   }
 
-  return meanings.map((meaning) => ({
-    pos: meaning.pos || '',
-    subtitle: meaning.subtitle || '',
-    pronunciation: meaning.pronunciation || '',
-    common_usage: meaning.common_usage && meaning.common_usage.length > 0
-      ? meaning.common_usage
-      : [{ context: '', example: '' }],
-    tone: meaning.tone || '',
-    category: meaning.category || '',
-    difficulty: meaning.difficulty || '',
-    meaning: meaning.meaning || meaning.subtitle || '',
-    mnemonic: meaning.mnemonic || '',
-    easyMeaning: meaning.easyMeaning || '',
-    kiddefinition: meaning.kiddefinition || '',
-    example_sentences: meaning.example_sentences && meaning.example_sentences.length > 0
-      ? meaning.example_sentences
-      : [''],
-    synonyms: meaning.synonyms || [],
-    antonyms: meaning.antonyms || [],
-    _id: meaning._id,
-  }));
+  return meanings.map((meaning) => {
+    const common =
+      (meaning as Meaning & { commonUsage?: CommonUsage[] }).commonUsage ??
+      meaning.common_usage;
+    const common_usage =
+      Array.isArray(common) && common.length > 0
+        ? common
+        : [{ context: '', example: '' }];
+    const rawExamples =
+      (meaning as Meaning & { exampleSentences?: unknown }).exampleSentences ??
+      meaning.example_sentences;
+    return {
+      pos: meaning.pos || '',
+      subtitle: meaning.subtitle || '',
+      pronunciation: meaning.pronunciation || '',
+      common_usage,
+      tone: meaning.tone || '',
+      category: meaning.category || '',
+      difficulty: meaning.difficulty || '',
+      meaning: meaning.meaning || meaning.subtitle || '',
+      mnemonic: meaning.mnemonic || '',
+      easyMeaning: meaning.easyMeaning || '',
+      kiddefinition:
+        meaning.kiddefinition ||
+        (meaning as Meaning & { kidDefinition?: string }).kidDefinition ||
+        '',
+      example_sentences: exampleSentencesToFormStrings(rawExamples),
+      synonyms: meaning.synonyms || [],
+      antonyms: meaning.antonyms || [],
+      _id: meaning._id,
+    };
+  });
 };
 
 const MeaningsUpdateForm = ({ wordId, initialMeanings }: MeaningsUpdateFormProps) => {

@@ -1,21 +1,23 @@
 import CategoryForm from '../components/CategoryForm';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
+import { FolderPlus } from 'lucide-react';
 
 export default function NewCategoryPage() {
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center gap-4">
-        <Link href="/categories/word-categories">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        </Link>
-        <h1 className="text-3xl font-bold">Create New Category</h1>
+        <div className="p-3 rounded-2xl bg-blue-500/10">
+          <FolderPlus className="h-8 w-8 text-blue-600" />
+        </div>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Create New Category</h1>
+          <p className="text-muted-foreground">
+            Organize words into custom categories for better learning
+          </p>
+        </div>
       </div>
+      
       <CategoryForm />
     </div>
   );
 }
-

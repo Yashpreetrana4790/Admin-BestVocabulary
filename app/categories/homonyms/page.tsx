@@ -1,6 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, ArrowLeft } from 'lucide-react';
+import { Plus, AlignLeft, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { getHomonyms } from '../service/categoriesService';
 import { PaginationControls } from '@/components/PaginationControl';
@@ -27,29 +26,29 @@ export default async function HomonymsPage({
     const { data: homonyms, pagination } = response;
 
     return (
-      <div className="p-6 space-y-6">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Button asChild variant="ghost" size="icon">
-              <Link href="/categories">
-                <ArrowLeft className="h-5 w-5" />
-              </Link>
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold">Homonyms</h1>
-              <p className="text-muted-foreground mt-1">
-                Words that are spelled and sound the same but have different meanings
-              </p>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="p-2 rounded-lg bg-emerald-500/10">
+                <AlignLeft className="h-5 w-5 text-emerald-600" />
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Homonyms</h1>
             </div>
+            <p className="text-muted-foreground">
+              Words that are spelled and sound the same but have different meanings
+            </p>
           </div>
-          <Button asChild>
+          <Button asChild className="gap-2">
             <Link href="/categories/homonyms/new">
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4" />
               Add Homonym
             </Link>
           </Button>
         </div>
 
+        {/* Search */}
         <SearchBar route="/categories/homonyms" showAdvanced={false} title="Search Homonyms" />
 
         {homonyms && homonyms.length > 0 ? (
@@ -63,49 +62,65 @@ export default async function HomonymsPage({
             />
           </>
         ) : (
-          <Card>
-            <CardContent className="py-12">
-              <div className="text-center text-muted-foreground">
-                <p className="text-lg mb-2">No homonyms found</p>
-                <p className="text-sm">Click "Add Homonym" to get started</p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="flex flex-col items-center justify-center py-20 text-center rounded-2xl border bg-card">
+            <div className="p-4 rounded-2xl bg-emerald-500/10 mb-6">
+              <AlignLeft className="h-12 w-12 text-emerald-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-foreground mb-2">No homonyms found</h3>
+            <p className="text-muted-foreground max-w-md mb-6">
+              {search 
+                ? `No homonyms match your search "${search}". Try a different term.`
+                : 'Get started by adding your first homonym.'}
+            </p>
+            <Button asChild>
+              <Link href="/categories/homonyms/new">
+                <Plus className="h-4 w-4 mr-2" />
+                Add First Homonym
+              </Link>
+            </Button>
+          </div>
         )}
       </div>
     );
   } catch (error) {
     console.error('Error loading homonyms:', error);
     return (
-      <div className="p-6 space-y-6">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Button asChild variant="ghost" size="icon">
-              <Link href="/categories">
-                <ArrowLeft className="h-5 w-5" />
-              </Link>
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold">Homonyms</h1>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="p-2 rounded-lg bg-emerald-500/10">
+                <AlignLeft className="h-5 w-5 text-emerald-600" />
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Homonyms</h1>
             </div>
+            <p className="text-muted-foreground">
+              Words that are spelled and sound the same but have different meanings
+            </p>
           </div>
-          <Button asChild>
+          <Button asChild className="gap-2">
             <Link href="/categories/homonyms/new">
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4" />
               Add Homonym
             </Link>
           </Button>
         </div>
-        <Card>
-          <CardContent className="py-12">
-            <div className="text-center text-destructive">
-              <p className="font-semibold mb-2">Failed to load homonyms</p>
+
+        {/* Error State */}
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-8">
+          <div className="flex items-start gap-4">
+            <div className="p-3 rounded-xl bg-destructive/10">
+              <AlertCircle className="h-6 w-6 text-destructive" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-destructive mb-2">Failed to load homonyms</h2>
               <p className="text-sm text-muted-foreground">
                 {error instanceof Error ? error.message : 'Please check your connection and try again.'}
               </p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     );
   }

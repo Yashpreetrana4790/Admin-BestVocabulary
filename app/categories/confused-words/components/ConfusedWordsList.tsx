@@ -2,19 +2,13 @@
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, MoreHorizontal } from 'lucide-react';
+import { Edit, BookOpen, Lightbulb, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { deleteConfusedWords } from '../../service/categoriesService';
 import { toast } from 'sonner';
 import { ConfirmationPopup } from '@/components/AlertComponent';
 import { useState } from 'react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 
 interface WordInfo {
   word: string;
@@ -55,91 +49,102 @@ export default function ConfusedWordsList({ confusedWords }: ConfusedWordsListPr
     }
   };
 
+  const difficultyConfig = {
+    easy: { bg: 'bg-emerald-500/10', text: 'text-emerald-600', border: 'border-emerald-500/20' },
+    medium: { bg: 'bg-amber-500/10', text: 'text-amber-600', border: 'border-amber-500/20' },
+    hard: { bg: 'bg-red-500/10', text: 'text-red-600', border: 'border-red-500/20' },
+  };
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {confusedWords.map((item) => (
-        <div 
-          key={item._id} 
-          className="group relative p-6 border border-gray-200 dark:border-gray-800 rounded-lg hover:shadow-lg transition-all duration-200 bg-white dark:bg-stone-900"
-        >
-          {/* Action Menu - Top Right */}
-          <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
-                  <Link href={`/categories/confused-words/edit/${item._id}`} className="cursor-pointer">
-                    <Edit className="h-4 w-4 mr-2" />
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      {confusedWords.map((item) => {
+        const difficulty = item.difficulty as keyof typeof difficultyConfig;
+        const diffStyle = difficultyConfig[difficulty] || difficultyConfig.medium;
+        
+        return (
+          <div 
+            key={item._id} 
+            className="group rounded-2xl border bg-card p-5 hover:shadow-lg hover:border-amber-300 transition-all duration-300"
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-amber-500/10 group-hover:scale-110 transition-transform">
+                  <BookOpen className="h-5 w-5 text-amber-600" />
+                </div>
+                <h3 className="font-bold text-foreground text-lg">
+                  {item.word1.word} <span className="text-muted-foreground font-normal">/</span> {item.word2.word}
+                </h3>
+              </div>
+              {item.difficulty && (
+                <Badge className={`${diffStyle.bg} ${diffStyle.text} border ${diffStyle.border} text-xs font-medium`}>
+                  {item.difficulty.charAt(0).toUpperCase() + item.difficulty.slice(1)}
+                </Badge>
+              )}
+            </div>
+
+            {/* Explanation */}
+            <p className="text-sm text-muted-foreground leading-relaxed mb-4 line-clamp-3">
+              {item.explanation}
+            </p>
+
+            {/* Memory Tip */}
+            {item.memoryTip && (
+              <div className="mb-4 p-3 rounded-xl bg-amber-500/5 border border-amber-500/20">
+                <div className="flex items-center gap-2 mb-1">
+                  <Lightbulb className="h-3.5 w-3.5 text-amber-600" />
+                  <p className="text-xs font-medium text-amber-600">Memory Tip</p>
+                </div>
+                <p className="text-xs text-muted-foreground">{item.memoryTip}</p>
+              </div>
+            )}
+
+            {/* Tags */}
+            {item.tags && item.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-4">
+                {item.tags.map((tag, index) => (
+                  <Badge key={index} variant="outline" className="text-xs bg-background">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex items-center justify-between gap-2 pt-4 border-t">
+              <Link 
+                href={`/categories/confused-words/edit/${item._id}`}
+                className="text-sm text-primary hover:text-primary/80 font-medium inline-flex items-center gap-1 group/link"
+              >
+                Continue reading
+                <ArrowRight className="h-3.5 w-3.5 group-hover/link:translate-x-1 transition-transform" />
+              </Link>
+              <div className="flex items-center gap-2">
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                >
+                  <Link href={`/categories/confused-words/edit/${item._id}`}>
+                    <Edit className="h-3.5 w-3.5" />
                     Edit
                   </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => handleDelete(item._id)}
-                  className="text-red-600 cursor-pointer"
+                </Button>
+                <ConfirmationPopup
+                  onConfirm={() => handleDelete(item._id)}
+                  confirmText="Delete"
+                  variant="destructive"
+                  size="sm"
                   disabled={deletingId === item._id}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          {/* Word Pair - Prominent Display */}
-          <div className="mb-4">
-            <h3 className="text-xl font-semibold text-blue-600 dark:text-blue-400 mb-3">
-              {item.word1.word} <span className="text-gray-400">/</span> {item.word2.word}
-            </h3>
-          </div>
-
-          {/* Explanation */}
-          <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed mb-4 line-clamp-4">
-            {item.explanation}
-          </p>
-
-          {/* Memory Tip (if available) */}
-          {item.memoryTip && (
-            <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-md border-l-2 border-amber-400">
-              <p className="text-xs font-medium text-amber-800 dark:text-amber-200 mb-1">💡 Memory Tip</p>
-              <p className="text-xs text-amber-700 dark:text-amber-300">{item.memoryTip}</p>
+                  title="Delete Confused Words"
+                  description={`Are you sure you want to delete "${item.word1.word} / ${item.word2.word}"? This action cannot be undone.`}
+                />
+              </div>
             </div>
-          )}
-
-          {/* Difficulty Badge */}
-          {item.difficulty && (
-            <div className="mb-4">
-              <Badge 
-                variant="outline" 
-                className={`text-xs ${
-                  item.difficulty === 'easy' 
-                    ? 'border-emerald-300 text-emerald-700 dark:text-emerald-400'
-                    : item.difficulty === 'medium'
-                    ? 'border-amber-300 text-amber-700 dark:text-amber-400'
-                    : 'border-red-300 text-red-700 dark:text-red-400'
-                }`}
-              >
-                {item.difficulty.charAt(0).toUpperCase() + item.difficulty.slice(1)}
-              </Badge>
-            </div>
-          )}
-
-          {/* Continue Reading / View Details Link */}
-          <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-800">
-            <Link 
-              href={`/categories/confused-words/edit/${item._id}`}
-              className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium inline-flex items-center gap-1 group/link"
-            >
-              Continue reading...
-              <span className="group-hover/link:translate-x-1 transition-transform">→</span>
-            </Link>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
-

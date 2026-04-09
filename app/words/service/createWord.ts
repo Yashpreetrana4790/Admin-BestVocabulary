@@ -3,8 +3,10 @@ interface CreateWordProps {
   pronunciation: string;
   frequency: string;
   overall_tone?: string;
+  overallTone?: string;
   etymology?: string;
   misspellings?: string[];
+  note?: string;
   meanings?: any[];
 }
 

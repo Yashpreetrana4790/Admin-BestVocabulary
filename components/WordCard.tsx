@@ -3,10 +3,9 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { WordData } from "@/types/word";
-import { Volume2, Bookmark, Share2, TrendingUp } from "lucide-react";
+import { Volume2, Bookmark, Share2, Edit } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import UsageDonutChart from "./UsageDonutChart";
 
 interface WordCardProps {
   wordsdata: WordData;
@@ -17,7 +16,6 @@ const WordCard = ({ wordsdata }: WordCardProps) => {
 
   if (!wordsdata) return null;
 
-  // Cleanup: Stop speech when component unmounts
   useEffect(() => {
     return () => {
       if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -28,43 +26,29 @@ const WordCard = ({ wordsdata }: WordCardProps) => {
     };
   }, []);
 
-  // Function to play pronunciation using browser's Speech Synthesis API
   const playPronunciation = () => {
     if (!wordsdata.word) return;
 
-    // Check if Speech Synthesis API is available
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
       alert('Speech synthesis is not supported in your browser.');
       return;
     }
 
-    // Stop any currently playing speech
     if (window.speechSynthesis.speaking) {
       window.speechSynthesis.cancel();
     }
 
     setIsPlaying(true);
 
-    // Create speech utterance
     const utterance = new SpeechSynthesisUtterance(wordsdata.word);
-    
-    // Set speech properties for better pronunciation
     utterance.lang = 'en-US';
-    utterance.rate = 0.9; // Slightly slower for clarity
+    utterance.rate = 0.9;
     utterance.pitch = 1;
     utterance.volume = 1;
 
-    // When speech ends, reset playing state
-    utterance.onend = () => {
-      setIsPlaying(false);
-    };
+    utterance.onend = () => setIsPlaying(false);
+    utterance.onerror = () => setIsPlaying(false);
 
-    utterance.onerror = (error) => {
-      console.error('Speech synthesis error:', error);
-      setIsPlaying(false);
-    };
-
-    // Speak the word
     try {
       window.speechSynthesis.speak(utterance);
     } catch (error) {
@@ -76,9 +60,9 @@ const WordCard = ({ wordsdata }: WordCardProps) => {
   const countOfMeanings = wordsdata?.meanings?.length || 0;
   const primaryMeaning = wordsdata?.meanings?.[0];
   const expressionsCount = wordsdata?.expressions?.length || 0;
-  const phrasalVerbsCount = wordsdata?.PhrasalVerbs?.length || 0;
+  const phrasalVerbsCount =
+    wordsdata?.phrasalVerbs?.length ?? wordsdata?.PhrasalVerbs?.length ?? 0;
 
-  // Normalize difficulty - map variations to standard values
   const normalizeDifficulty = (difficulty: string | undefined, frequency: string | undefined): { value: string; display: string } | null => {
     const value = difficulty || frequency;
     if (!value) return null;
@@ -99,32 +83,32 @@ const WordCard = ({ wordsdata }: WordCardProps) => {
   };
 
   const difficultyColors = {
-    Beginner: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 border-emerald-200",
-    Easy: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 border-emerald-200",
-    Intermediate: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 border-amber-200",
-    Advanced: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 border-red-200",
-    Hard: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 border-red-200"
+    Easy: "bg-emerald-500/10 text-emerald-600 border-emerald-200",
+    Beginner: "bg-emerald-500/10 text-emerald-600 border-emerald-200",
+    Intermediate: "bg-amber-500/10 text-amber-600 border-amber-200",
+    Advanced: "bg-rose-500/10 text-rose-600 border-rose-200",
+    Hard: "bg-rose-500/10 text-rose-600 border-rose-200"
   };
 
   const normalizedDifficulty = normalizeDifficulty(primaryMeaning?.difficulty, wordsdata.frequency);
 
   return (
-    <Link href={`/words/${wordsdata.word}`} className="block h-full">
-      <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-stone-900 p-5 hover:shadow-md transition-all duration-200 h-full flex flex-col overflow-hidden">
-        {/* Header: Word name, speaker icon, pronunciation, and difficulty badge */}
-        <div className="flex items-center justify-between mb-4 shrink-0">
+    <Link href={`/words/${wordsdata.word}`} className="block h-full group">
+      <div className="rounded-2xl border bg-card p-5 hover:shadow-lg hover:border-primary/20 transition-all duration-300 h-full flex flex-col overflow-hidden relative">
+        {/* Hover gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl" />
+        
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4 shrink-0 relative z-10">
           <div className="flex items-center gap-2 flex-1 min-w-0">
-            {/* Large word name */}
-            <h3 className="text-2xl font-bold text-black-900 dark:text-blue-100 truncate capitalize">
+            <h3 className="text-xl font-bold text-foreground truncate capitalize">
               {wordsdata.word}
             </h3>
-            {/* Vertical divider */}
-            <span className="text-gray-300 dark:text-gray-700 text-lg">|</span>
-            {/* Speaker icon button */}
+            <span className="text-border text-lg">|</span>
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 cursor-pointer shrink-0 p-0 hover:bg-transparent"
+              className="h-7 w-7 shrink-0 p-0 hover:bg-primary/10"
               onClick={(e) => {
                 e.preventDefault();
                 playPronunciation();
@@ -132,16 +116,14 @@ const WordCard = ({ wordsdata }: WordCardProps) => {
               disabled={isPlaying}
               title="Play pronunciation"
             >
-              <Volume2 className={`h-4 w-4 ${isPlaying ? 'text-blue-600 animate-pulse' : 'text-gray-500'}`} />
+              <Volume2 className={`h-4 w-4 ${isPlaying ? 'text-primary animate-pulse' : 'text-muted-foreground'}`} />
             </Button>
-            {/* Pronunciation text - underlined and clickable, positioned after speaker */}
             <button
               onClick={(e) => {
                 e.preventDefault();
                 playPronunciation();
               }}
-              className="text-sm text-gray-600 dark:text-gray-400 underline hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Click to hear pronunciation"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors"
               disabled={isPlaying}
               type="button"
             >
@@ -149,137 +131,93 @@ const WordCard = ({ wordsdata }: WordCardProps) => {
             </button>
           </div>
           
-          {/* Difficulty badge at top right */}
           {normalizedDifficulty && (
-            <Badge 
-              className={`text-xs shrink-0 ml-2 ${difficultyColors[normalizedDifficulty.value as keyof typeof difficultyColors] || difficultyColors.Intermediate}`}
-            >
+            <Badge className={`text-xs shrink-0 ml-2 border ${difficultyColors[normalizedDifficulty.value as keyof typeof difficultyColors] || difficultyColors.Intermediate}`}>
               {normalizedDifficulty.display}
             </Badge>
           )}
         </div>
 
-        {/* Definition text - show multiple meanings if available */}
-        <div className="flex-grow mb-4 space-y-2 min-h-0 overflow-hidden">
+        {/* Definition */}
+        <div className="flex-grow mb-4 space-y-2 min-h-0 overflow-hidden relative z-10">
           {wordsdata.meanings && wordsdata.meanings.length > 0 ? (
             <>
-              {/* Show first 2 meanings */}
               {wordsdata?.meanings?.slice(0, 2)?.map((meaning, index) => (
                 <div key={index} className="space-y-1">
                   {meaning.pos && (
-                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                    <span className="text-xs font-medium text-muted-foreground uppercase">
                       {meaning.pos}
                     </span>
                   )}
-                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed line-clamp-2 overflow-hidden text-ellipsis">
+                  <p className="text-sm text-foreground/80 leading-relaxed line-clamp-2">
                     {meaning?.meaning || meaning?.subtitle || meaning?.easyMeaning || 'No definition available'}
                   </p>
                   {index < Math.min(wordsdata?.meanings?.length - 1, 1) && wordsdata?.meanings?.length > 1 && (
-                    <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
+                    <div className="border-t my-2"></div>
                   )}
                 </div>
               ))}
-              {/* Show indicator if there are more meanings */}
               {wordsdata?.meanings?.length > 2 && (
-                <div className="pt-1">
-                  <span className="text-xs text-gray-500 dark:text-gray-400 inline-flex items-center gap-1 font-medium italic">
-                    +{wordsdata?.meanings?.length - 2} more meaning{wordsdata?.meanings?.length - 2 > 1 ? 's' : ''}
-                  </span>
-                </div>
+                <span className="text-xs text-muted-foreground font-medium">
+                  +{wordsdata?.meanings?.length - 2} more
+                </span>
               )}
             </>
           ) : (
-            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed line-clamp-2 overflow-hidden text-ellipsis">
-              No definition available
-            </p>
+            <p className="text-sm text-muted-foreground">No definition available</p>
           )}
         </div>
 
-        {/* Tags section - only show divider and tags if there are tags to display */}
+        {/* Tags */}
         {(expressionsCount > 0 || countOfMeanings > 0 || phrasalVerbsCount > 0) && (
-          <>
-            {/* Divider - only shown when there are tags */}
-            <div className="border-t border-dashed border-black dark:border-gray-700 my-3"></div>
-            <div className="space-y-2 mb-3">
-            {/* First row of tags */}
-            <div className="flex flex-wrap gap-2">
-              {/* Show idioms/phrases tag if there are expressions (regardless of meaning count) */}
-              {expressionsCount > 0 && (
-                <Badge variant="outline" className="text-xs bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-900/20 dark:text-sky-300 dark:border-sky-800">
-                  Idiom & phrase {expressionsCount}
-                </Badge>
-              )}
-              {/* Show meanings tag for any number of meanings */}
-              {countOfMeanings > 0 && (
-                <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-800">
-                  {countOfMeanings === 1 ? '1 meaning' : `${countOfMeanings} meanings`}
-                </Badge>
-              )}
-            </div>
-
-            {/* Second divider if there are phrasal verbs */}
-            {phrasalVerbsCount > 0 && (
-              <>
-                <div className="border-t border-dashed border-gray-300 dark:border-gray-700"></div>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline" className="text-xs bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-900/20 dark:text-sky-300 dark:border-sky-800">
-                    Idiom & phrase connection {phrasalVerbsCount}
-                  </Badge>
-                </div>
-              </>
+          <div className="flex flex-wrap gap-2 mb-3 relative z-10">
+            {expressionsCount > 0 && (
+              <Badge variant="outline" className="text-xs bg-blue-500/5 text-blue-600 border-blue-200">
+                {expressionsCount} expressions
+              </Badge>
             )}
-            </div>
-          </>
+            {countOfMeanings > 0 && (
+              <Badge variant="outline" className="text-xs bg-amber-500/5 text-amber-600 border-amber-200">
+                {countOfMeanings} meanings
+              </Badge>
+            )}
+            {phrasalVerbsCount > 0 && (
+              <Badge variant="outline" className="text-xs bg-purple-500/5 text-purple-600 border-purple-200">
+                {phrasalVerbsCount} phrasal verbs
+              </Badge>
+            )}
+          </div>
         )}
 
-        {/* Footer: Usage donut chart and action buttons - overflow visible for tooltip */}
-        <div className="flex justify-between items-center mt-auto pt-3 border-t border-gray-200 dark:border-gray-800 shrink-0" style={{ overflow: 'visible' }}>
-          {/* Usage Distribution Donut Chart */}
-          <div className="flex items-center gap-2" style={{ overflow: 'visible', position: 'relative', zIndex: 10 }}>
-            <UsageDonutChart 
-              usageDistribution={wordsdata?.usage_distribution}
-              commonUsage={primaryMeaning?.common_usage}
-              size={40}
-            />
-          </div>
-
-          {/* Action buttons */}
+        {/* Footer */}
+        <div className="flex justify-end items-center mt-auto pt-3 border-t shrink-0 relative z-10">
           <div className="flex items-center gap-1">
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 cursor-pointer"
-              onClick={(e) => {
-                e.preventDefault();
-                // Add bookmark functionality
-              }}
+              className="h-8 w-8 hover:bg-primary/10"
+              onClick={(e) => e.preventDefault()}
               title="Bookmark"
             >
-              <Bookmark className="h-4 w-4 text-gray-500 hover:text-blue-600" />
+              <Bookmark className="h-4 w-4 text-muted-foreground hover:text-primary" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 cursor-pointer"
-              onClick={(e) => {
-                e.preventDefault();
-                // Add share functionality
-              }}
+              className="h-8 w-8 hover:bg-primary/10"
+              onClick={(e) => e.preventDefault()}
               title="Share"
             >
-              <Share2 className="h-4 w-4 text-gray-500 hover:text-blue-600" />
+              <Share2 className="h-4 w-4 text-muted-foreground hover:text-primary" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 cursor-pointer"
-              onClick={(e) => {
-                e.preventDefault();
-                // Add trends/stats functionality
-              }}
-              title="View trends"
+              className="h-8 w-8 hover:bg-primary/10"
+              onClick={(e) => e.preventDefault()}
+              title="Edit"
             >
-              <TrendingUp className="h-4 w-4 text-gray-500 hover:text-blue-600" />
+              <Edit className="h-4 w-4 text-muted-foreground hover:text-primary" />
             </Button>
           </div>
         </div>

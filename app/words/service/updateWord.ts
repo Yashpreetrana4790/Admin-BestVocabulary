@@ -1,26 +1,44 @@
-
-
 interface WordFormProps {
   wordId: string;
   word: string;
   pronunciation: string;
   frequency: string;
-  overall_tone: string;
+  overall_tone?: string;
+  overallTone?: string;
   etymology: string;
-  misspellings: string[]
+  misspellings: string[];
+  note?: string;
 }
 
-
-
-export const updateBaseWordInfo = async ({ wordId, word, pronunciation, frequency, overall_tone, etymology, misspellings }: WordFormProps) => {
+export const updateBaseWordInfo = async ({
+  wordId,
+  word,
+  pronunciation,
+  frequency,
+  overall_tone,
+  overallTone,
+  etymology,
+  misspellings,
+  note,
+}: WordFormProps) => {
   try {
+    const tone = (overall_tone ?? overallTone ?? '').trim() || undefined;
     const url = `${process.env.NEXT_PUBLIC_API_URL}/words/word/${wordId}`;
     const res = await fetch(url, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ word, pronunciation, frequency, overall_tone, etymology, misspellings }),
+      body: JSON.stringify({
+        word,
+        pronunciation,
+        frequency,
+        overall_tone: tone,
+        overallTone: tone,
+        etymology,
+        misspellings,
+        note,
+      }),
     });
     if (!res.ok) {
       throw new Error(`Failed to update word: ${res.statusText}`);

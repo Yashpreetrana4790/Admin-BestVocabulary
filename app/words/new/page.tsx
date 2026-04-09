@@ -25,6 +25,7 @@ export default function NewWordPage() {
             frequency="medium"
             overall_tone=""
             etymology=""
+            note=""
             misspellings={[]}
           />
           <p className="mt-4 text-sm text-muted-foreground">

@@ -84,7 +84,8 @@ export default async function WordDetailPage({ params }: WordProp) {
                 word={wordData?.word}
                 pronunciation={wordData?.pronunciation}
                 frequency={wordData?.frequency}
-                overall_tone={wordData?.overall_tone}
+                overall_tone={wordData?.overall_tone ?? ''}
+                overallTone={wordData?.overallTone}
                 wordId={wordData?._id}
                 etymology={wordData?.etymology}
                 misspellings={wordData?.misspellings}

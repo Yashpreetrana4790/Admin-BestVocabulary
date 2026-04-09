@@ -1,5 +1,5 @@
-import { getHomonymById } from '../../service/categoriesService';
-import HomonymForm from '../components/HomonymForm';
+import { getHomonymById } from '../../../service/categoriesService';
+import HomonymForm from '../../components/HomonymForm';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';

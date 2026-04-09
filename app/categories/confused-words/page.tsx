@@ -1,6 +1,5 @@
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, ArrowLeft } from 'lucide-react';
+import { Plus, BookOpen, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { getConfusedWords } from '../service/categoriesService';
 import { PaginationControls } from '@/components/PaginationControl';
@@ -27,33 +26,29 @@ export default async function ConfusedWordsPage({
     const { data: confusedWords, pagination } = response;
 
     return (
-      <div className="p-6 space-y-6">
-        <div className="space-y-4 mb-8">
-          <div className="flex justify-between items-start">
-            <div className="flex items-center gap-4">
-              <Button asChild variant="ghost" size="icon">
-                <Link href="/categories">
-                  <ArrowLeft className="h-5 w-5" />
-                </Link>
-              </Button>
-              <div>
-                <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-                  Commonly Confused Words
-                </h1>
-                <p className="text-lg text-gray-600 dark:text-gray-400">
-                  Caught between words? Make the right choice.
-                </p>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="p-2 rounded-lg bg-amber-500/10">
+                <BookOpen className="h-5 w-5 text-amber-600" />
               </div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Confused Words</h1>
             </div>
-            <Button asChild className="shrink-0">
-              <Link href="/categories/confused-words/new">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Confused Word Pair
-              </Link>
-            </Button>
+            <p className="text-muted-foreground">
+              Commonly confused word pairs and their differences
+            </p>
           </div>
+          <Button asChild className="gap-2">
+            <Link href="/categories/confused-words/new">
+              <Plus className="h-4 w-4" />
+              Add Word Pair
+            </Link>
+          </Button>
         </div>
 
+        {/* Search */}
         <SearchBar route="/categories/confused-words" showAdvanced={false} title="Search Confused Words" />
 
         {confusedWords && confusedWords.length > 0 ? (
@@ -67,56 +62,65 @@ export default async function ConfusedWordsPage({
             />
           </>
         ) : (
-          <Card>
-            <CardContent className="py-12">
-              <div className="text-center text-muted-foreground">
-                <p className="text-lg mb-2">No confused word pairs found</p>
-                <p className="text-sm">Click "Add Confused Word Pair" to get started</p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="flex flex-col items-center justify-center py-20 text-center rounded-2xl border bg-card">
+            <div className="p-4 rounded-2xl bg-amber-500/10 mb-6">
+              <BookOpen className="h-12 w-12 text-amber-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-foreground mb-2">No confused word pairs found</h3>
+            <p className="text-muted-foreground max-w-md mb-6">
+              {search 
+                ? `No confused words match your search "${search}". Try a different term.`
+                : 'Get started by adding your first confused word pair.'}
+            </p>
+            <Button asChild>
+              <Link href="/categories/confused-words/new">
+                <Plus className="h-4 w-4 mr-2" />
+                Add First Word Pair
+              </Link>
+            </Button>
+          </div>
         )}
       </div>
     );
   } catch (error) {
     console.error('Error loading confused words:', error);
     return (
-      <div className="p-6 space-y-6">
-        <div className="space-y-4 mb-8">
-          <div className="flex justify-between items-start">
-            <div className="flex items-center gap-4">
-              <Button asChild variant="ghost" size="icon">
-                <Link href="/categories">
-                  <ArrowLeft className="h-5 w-5" />
-                </Link>
-              </Button>
-              <div>
-                <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-                  Commonly Confused Words
-                </h1>
-                <p className="text-lg text-gray-600 dark:text-gray-400">
-                  Caught between words? Make the right choice.
-                </p>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="p-2 rounded-lg bg-amber-500/10">
+                <BookOpen className="h-5 w-5 text-amber-600" />
               </div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Confused Words</h1>
             </div>
-            <Button asChild className="shrink-0">
-              <Link href="/categories/confused-words/new">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Confused Word Pair
-              </Link>
-            </Button>
+            <p className="text-muted-foreground">
+              Commonly confused word pairs and their differences
+            </p>
           </div>
+          <Button asChild className="gap-2">
+            <Link href="/categories/confused-words/new">
+              <Plus className="h-4 w-4" />
+              Add Word Pair
+            </Link>
+          </Button>
         </div>
-        <Card>
-          <CardContent className="py-12">
-            <div className="text-center text-destructive">
-              <p className="font-semibold mb-2">Failed to load confused words</p>
+
+        {/* Error State */}
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-8">
+          <div className="flex items-start gap-4">
+            <div className="p-3 rounded-xl bg-destructive/10">
+              <AlertCircle className="h-6 w-6 text-destructive" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-destructive mb-2">Failed to load confused words</h2>
               <p className="text-sm text-muted-foreground">
                 {error instanceof Error ? error.message : 'Please check your connection and try again.'}
               </p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     );
   }

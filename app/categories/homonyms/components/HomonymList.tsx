@@ -1,9 +1,8 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, AlignLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { deleteHomonym } from '../../service/categoriesService';
@@ -49,71 +48,90 @@ export default function HomonymList({ homonyms }: HomonymListProps) {
     }
   };
 
-  const difficultyColors = {
-    easy: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
-    medium: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
-    hard: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+  const difficultyConfig = {
+    easy: { bg: 'bg-emerald-500/10', text: 'text-emerald-600', border: 'border-emerald-500/20' },
+    medium: { bg: 'bg-amber-500/10', text: 'text-amber-600', border: 'border-amber-500/20' },
+    hard: { bg: 'bg-red-500/10', text: 'text-red-600', border: 'border-red-500/20' },
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {homonyms.map((homonym) => (
-        <Card key={homonym._id} className="hover:shadow-md transition-shadow">
-          <CardHeader>
-            <div className="flex justify-between items-start">
-              <CardTitle className="text-xl capitalize">{homonym.word}</CardTitle>
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      {homonyms.map((homonym) => {
+        const difficulty = homonym.difficulty as keyof typeof difficultyConfig;
+        const diffStyle = difficultyConfig[difficulty] || difficultyConfig.medium;
+        
+        return (
+          <div 
+            key={homonym._id} 
+            className="group rounded-2xl border bg-card p-5 hover:shadow-lg hover:border-emerald-300 transition-all duration-300"
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-emerald-500/10 group-hover:scale-110 transition-transform">
+                  <AlignLeft className="h-5 w-5 text-emerald-600" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-foreground text-xl capitalize">
+                    {homonym.word}
+                  </h3>
+                  {homonym.pronunciation && (
+                    <p className="text-sm text-muted-foreground">/{homonym.pronunciation}/</p>
+                  )}
+                </div>
+              </div>
               {homonym.difficulty && (
-                <Badge className={difficultyColors[homonym.difficulty as keyof typeof difficultyColors] || ''}>
+                <Badge className={`${diffStyle.bg} ${diffStyle.text} border ${diffStyle.border} text-xs font-medium`}>
                   {homonym.difficulty}
                 </Badge>
               )}
             </div>
-            {homonym.pronunciation && (
-              <p className="text-sm text-muted-foreground mt-1">{homonym.pronunciation}</p>
-            )}
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="space-y-2">
+
+            {/* Meanings */}
+            <div className="space-y-3 mb-4">
               {homonym.meanings.slice(0, 2).map((meaning, index) => (
-                <div key={index} className="p-2 bg-muted rounded-md">
+                <div key={index} className="p-3 rounded-xl bg-muted/50 border border-transparent hover:border-border transition-colors">
                   {meaning.partOfSpeech && (
-                    <Badge variant="outline" className="text-xs mb-1">
+                    <Badge variant="outline" className="text-xs mb-2 bg-background">
                       {meaning.partOfSpeech}
                     </Badge>
                   )}
-                  <div className="text-sm">{meaning.meaning}</div>
+                  <p className="text-sm text-foreground leading-relaxed">{meaning.meaning}</p>
                   {meaning.example && (
-                    <div className="text-xs italic text-muted-foreground mt-1">
+                    <p className="text-xs italic text-muted-foreground/80 mt-2 pl-3 border-l-2 border-emerald-300">
                       "{meaning.example}"
-                    </div>
+                    </p>
                   )}
                 </div>
               ))}
               {homonym.meanings.length > 2 && (
-                <div className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground text-center py-1">
                   +{homonym.meanings.length - 2} more meaning{homonym.meanings.length - 2 > 1 ? 's' : ''}
-                </div>
+                </p>
               )}
             </div>
 
+            {/* Tags */}
             {homonym.tags && homonym.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1">
+              <div className="flex flex-wrap gap-1.5 mb-4">
                 {homonym.tags.map((tag, index) => (
-                  <Badge key={index} variant="outline" className="text-xs">
+                  <Badge key={index} variant="outline" className="text-xs bg-background">
                     {tag}
                   </Badge>
                 ))}
               </div>
             )}
 
-            <div className="flex justify-end gap-2 pt-2 border-t">
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-2 pt-4 border-t">
               <Button
                 asChild
                 variant="outline"
                 size="sm"
+                className="gap-1.5"
               >
                 <Link href={`/categories/homonyms/edit/${homonym._id}`}>
-                  <Edit className="h-4 w-4 mr-2" />
+                  <Edit className="h-3.5 w-3.5" />
                   Edit
                 </Link>
               </Button>
@@ -127,10 +145,9 @@ export default function HomonymList({ homonyms }: HomonymListProps) {
                 description={`Are you sure you want to delete "${homonym.word}"? This action cannot be undone.`}
               />
             </div>
-          </CardContent>
-        </Card>
-      ))}
+          </div>
+        );
+      })}
     </div>
   );
 }
-
