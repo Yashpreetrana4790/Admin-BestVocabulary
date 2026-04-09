@@ -51,27 +51,28 @@ export const updateBaseWordInfo = async ({
 };
 
 
-interface Meaning {
+export interface WordMeaningPayload {
   pos: string;
-  subtitle: string;
+  subtitle?: string;
   pronunciation: string;
   common_usage: {
     context: string;
     example: string;
   }[];
-  tone: string;
-  category: string;
-  difficulty: string;
+  tone?: string;
+  category?: string;
+  difficulty?: string;
   meaning: string;
-  mnemonic: string;
-  easyMeaning: string;
-  kiddefinition: string;
+  mnemonic?: string;
+  easyMeaning?: string;
+  kiddefinition?: string;
   example_sentences: string[];
-  synonyms: string[];
-  antonyms: string[];
+  synonyms?: string[];
+  antonyms?: string[];
+  _id?: string;
 }
 
-export const updateWordMeaningInfo = async (wordId: string, meanings: Meaning[]) => {
+export const updateWordMeaningInfo = async (wordId: string, meanings: WordMeaningPayload[]) => {
   try {
     console.log(meanings, "mng")
     const url = `${process.env.NEXT_PUBLIC_API_URL}/words/words/${wordId}/meanings`;

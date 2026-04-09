@@ -533,7 +533,9 @@ export const WordRelationsTab: React.FC<WordRelationsTabProps> = ({
                       key={result?._id || Math.random()}
                       word={result}
                       isAlreadyAdded={allRelations.some((r) => r?.wordId === result?._id)}
-                      onAdd={() => handleAddRelation(result, activeTab)}
+                      onAdd={() =>
+                        handleAddRelation(result, activeTab === 'synonyms' ? 'synonym' : 'antonym')
+                      }
                     />
                   ))
                 ) : searchQuery?.length >= 2 && !isSearching ? (

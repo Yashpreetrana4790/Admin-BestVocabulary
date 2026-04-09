@@ -12,6 +12,7 @@ export interface WordReference {
 export type ExampleSentenceItem = string | { text: string; context?: string; source?: string; register?: string };
 
 export interface WordMeaning {
+  _id?: string;
   pos?: string;
   subtitle?: string;
   pronunciation?: string;

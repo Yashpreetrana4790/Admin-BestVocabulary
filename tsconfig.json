@@ -35,7 +35,8 @@
     ".next/types/**/*.ts",
     "app/words/service",
     "next-env.d.ts",
-    "tmp-build/types/**/*.ts"
+    "tmp-build/types/**/*.ts",
+    "next-build-cache/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

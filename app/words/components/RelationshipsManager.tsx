@@ -15,8 +15,8 @@ interface RelationshipsManagerProps {
   currentWord: string;
   meaningId: string;
   meaningIndex: number;
-  currentSynonyms?: Array<{ _id: string; word: string } | string>;
-  currentAntonyms?: Array<{ _id: string; word: string } | string>;
+  currentSynonyms?: Array<{ _id: string | { $oid: string }; word: string } | string>;
+  currentAntonyms?: Array<{ _id: string | { $oid: string }; word: string } | string>;
 }
 
 export default function RelationshipsManager({
@@ -32,16 +32,19 @@ export default function RelationshipsManager({
   const [isSearching, setIsSearching] = useState(false);
   
   // Parse current synonyms/antonyms - handle both object and string formats
-  const parseIds = (items: Array<{ _id: string; word: string } | string>) => {
-    return items.map(item => typeof item === 'string' ? item : item._id);
+  const idToString = (id: string | { $oid: string }) =>
+    typeof id === 'string' ? id : id.$oid;
+
+  const parseIds = (items: Array<{ _id: string | { $oid: string }; word: string } | string>) => {
+    return items.map(item => typeof item === 'string' ? item : idToString(item._id));
   };
   
-  const parseWords = (items: Array<{ _id: string; word: string } | string>) => {
+  const parseWords = (items: Array<{ _id: string | { $oid: string }; word: string } | string>) => {
     return items.reduce((acc: Record<string, string>, item) => {
       if (typeof item === 'string') {
         acc[item] = 'Loading...';
       } else {
-        acc[item._id] = item.word;
+        acc[idToString(item._id)] = item.word;
       }
       return acc;
     }, {});
@@ -73,8 +76,8 @@ export default function RelationshipsManager({
         const filtered = results.words.filter(
           (w: WordData) =>
             w.word.toLowerCase() !== currentWord.toLowerCase() &&
-            !synonyms.includes(w._id) &&
-            !antonyms.includes(w._id)
+            !synonyms.includes(idToString(w._id)) &&
+            !antonyms.includes(idToString(w._id))
         );
         setSearchResults(filtered);
       } catch (error) {
@@ -105,7 +108,7 @@ export default function RelationshipsManager({
     e.preventDefault();
     if (!draggedWord) return;
 
-    const wordId = draggedWord._id;
+    const wordId = idToString(draggedWord._id);
     const word = draggedWord.word;
 
     if (relationType === 'synonym') {
@@ -121,7 +124,7 @@ export default function RelationshipsManager({
     }
 
     // Remove from search results
-    setSearchResults(searchResults.filter(w => w._id !== wordId));
+    setSearchResults(searchResults.filter(w => idToString(w._id) !== wordId));
     setDraggedWord(null);
   };
 
@@ -150,7 +153,7 @@ export default function RelationshipsManager({
       try {
         const wordPromises = missingIds.map(async (id) => {
           // Try to find in search results first
-          const found = searchResults.find(w => w._id === id);
+          const found = searchResults.find(w => idToString(w._id) === id);
           if (found) {
             return { id, word: found.word };
           }
@@ -225,7 +228,7 @@ export default function RelationshipsManager({
               <p className="text-xs font-medium text-muted-foreground mb-2">Search Results</p>
               {searchResults.map((word) => (
                 <div
-                  key={word._id}
+                  key={idToString(word._id)}
                   draggable
                   onDragStart={() => handleDragStart(word)}
                   className="flex items-center gap-2 p-2 border rounded cursor-move hover:bg-muted transition-colors"

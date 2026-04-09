@@ -24,7 +24,7 @@ export default function CategoriesLayout({
     : isWordCategories ? 'Word Categories'
     : null;
 
-  const currentIcon = isHomophones ? Languages
+  const CurrentIcon = isHomophones ? Languages
     : isHomonyms ? AlignLeft
     : isConfusedWords ? BookOpen
     : isWordCategories ? FolderTree
@@ -57,7 +57,7 @@ export default function CategoriesLayout({
           <>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
             <span className={cn("flex items-center gap-1.5 font-medium", currentColor)}>
-              {currentIcon && <currentIcon className="h-4 w-4" />}
+              {CurrentIcon && <CurrentIcon className="h-4 w-4" />}
               {currentCategory}
             </span>
           </>

@@ -73,7 +73,7 @@ export default async function IdiomsPage({
             </div>
             <h3 className="text-xl font-semibold text-foreground mb-2">No idioms found</h3>
             <p className="text-muted-foreground max-w-md mb-6">
-              {searchParams?.search
+              {params?.search
                 ? `No idioms match your search. Try a different search term.`
                 : "There are no idioms in the database yet. Add your first idiom to get started."}
             </p>
