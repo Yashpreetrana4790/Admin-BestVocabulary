@@ -49,7 +49,7 @@ export default function WordSearchWithDrag({
   const [showResults, setShowResults] = useState(false);
   const [selectedWord, setSelectedWord] = useState<WordOption | null>(null);
   const [isDraggingFromHere, setIsDraggingFromHere] = useState(false);
-  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -75,7 +75,12 @@ export default function WordSearchWithDrag({
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
   }, []);
 
   const fetchWordDetails = async (word: string) => {
